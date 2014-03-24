@@ -1,4 +1,5 @@
 require "comodule/version"
+require "rails"
 
 module Comodule
   autoload :UniArray,       'comodule/uni_array'

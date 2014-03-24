@@ -11,6 +11,7 @@ module_function
   # フレームワークに影響がないように、既に存在するメソッドのオーバーライドは許可しない。
   def customize
     Dir.glob(File.expand_path('../customize_class/*', __FILE__)).each do |path|
+      require path
       name = File.basename(path, "_custom.rb").classify
       mod = "Comodule::CustomizeClass::#{name}Custom".constantize
       klass = name.constantize
