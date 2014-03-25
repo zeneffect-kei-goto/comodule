@@ -11,7 +11,7 @@ module Comodule::ConfigSupport
       if directive =~ /^(.+)=/
         return instance_variable_set("@#{$1}", arg)
       end
-      value = instance_variable_get "@#{directive}"
+      value = instance_variable_get("@#{directive}")
       if @configure_type == :hard && !value
         raise ArgumentError, "Comodule::ConfigSupport::Config is missing this directive [#{directive}]."
       end
@@ -19,11 +19,13 @@ module Comodule::ConfigSupport
     end
 
     def to_hash
-      instance_variables.inject({}) do |hsh, variable_name|
+      hsh = {}
+      instance_variables.each do |variable_name|
+        next if variable_name == :@configure_type
         key = variable_name.to_s.sub(/@/, '').to_sym
         hsh[key] = instance_variable_get(variable_name)
-        hsh
       end
+      hsh
     end
   end
 
@@ -46,7 +48,6 @@ module Comodule::ConfigSupport
 
 
   def self.included(receiver)
-    receiver.extend         ClassMethods
-    receiver.send :include, InstanceMethods
+    receiver.extend ClassMethods
   end
 end
