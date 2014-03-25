@@ -98,14 +98,6 @@ module Comodule::CustomizeClass::StringCustom
     self
   end
 
-  # 整数らしき文字は整数にして返す。
-  def like_i_to_i
-    if self =~ /^[1-9][0-9]*([.]0)?$/
-      return to_i
-    end
-    self
-  end
-
   # 空白文字をワイルドカードに置き換えて検索ワードを作る。
   # ex. "株　 山 　のり" -> "株%山%のり%"
   # デフォルトは前方一致、部分一致にしたければ:prefixに"%"を渡す。
