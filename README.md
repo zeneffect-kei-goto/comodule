@@ -106,6 +106,16 @@ arr |= arr2
 
 ## クラスの拡張
 
+Comodule は、Hash と String の独自拡張を持っています。
+利用するには `Comodule::CustomizeClass.customize` を使います。Rails の場合は、`config/initializers/comodule.rb` などに
+
+```ruby
+Comodule::CustomizeClass.customize
+```
+
+として、読み込みます。このメソッドは複数回呼び出すとエラーになりますので、気をつけてください。
+尚、Comodule は既存のメソッドをオーバーライドできません。
+
 ### Hash
 
 #### pullout, pullout!
