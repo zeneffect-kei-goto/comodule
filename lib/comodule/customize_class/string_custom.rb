@@ -101,9 +101,11 @@ module Comodule::CustomizeClass::StringCustom
   # 空白文字をワイルドカードに置き換えて検索ワードを作る。
   # ex. "株　 山 　のり" -> "株%山%のり%"
   # デフォルトは前方一致、部分一致にしたければ:prefixに"%"を渡す。
-  def to_token(prefix: "", suffix: "%")
+  def to_token(hsh={})
+    prefix = hsh[:prefix] || ""
+    suffix = hsh[:suffix] || ?%
     str = sub(/^%+/,'').sub(/%+$/,'')
-    prefix + str.standardize.split(/\p{Z}+/u).join("%") + suffix
+    prefix + str.split(/\p{Z}+/u).join(?%) + suffix
   end
 
   def to_token!(*args)
