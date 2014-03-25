@@ -12,7 +12,7 @@ module Comodule::CustomizeClass::HashCustom
   # キーが見つからないときは例外を挙げる。
   def pullout!(*args)
     args.inject({}) do |hsh, key|
-      raise ArgumentError, "U::CustomizeClass::HashCustom cannot find key '#{key}' is a #{key.class.name}." unless self[key]
+      raise ArgumentError, "Comodule::CustomizeClass::HashCustom cannot find key '#{key}' is a #{key.class.name}." unless self[key]
       hsh[key] = self[key]
       hsh
     end

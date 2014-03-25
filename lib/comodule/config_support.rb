@@ -13,7 +13,7 @@ module Comodule::ConfigSupport
       end
       value = instance_variable_get "@#{directive}"
       if @configure_type == :hard && !value
-        raise ArgumentError, "U::ConfigSupport::Config is missing this directive [#{directive}]."
+        raise ArgumentError, "Comodule::ConfigSupport::Config is missing this directive [#{directive}]."
       end
       value
     end
@@ -30,7 +30,7 @@ module Comodule::ConfigSupport
 
   module ClassMethods
     def create_config(config_hash={})
-      U::ConfigSupport::Config.new config_hash
+      Comodule::ConfigSupport::Config.new config_hash
     end
 
     def create_config_hard(config_hash={})
