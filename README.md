@@ -52,6 +52,50 @@ config.nothing
 # => ArgumentError: Comodole::ConfigSupport::Config is missing this directive [nothing].
 ```
 
+`new` の引数に `Hash` が含まれる場合は、再帰的にオブジェクト化します。
+
+```ruby
+config = Comodule::ConfigSupport::Config.new(
+  host: 'example.com',
+  port: '3000',
+  db: {
+    host: 'rds',
+    database: 'app_development',
+    username: 'ec2-user',
+    password: 'secret',
+    instance: {
+      type: 't1.micro',
+      multi_az: true
+    }
+  }
+)
+
+config.db.host
+# => "rds"
+
+config.db.instance.type
+# => "t1.micro"
+```
+
+角括弧演算子を使えば、`Hash` のような振る舞いもします。
+
+```ruby
+config = Comodule::ConfigSupport::Config.new
+
+config[:host] = 'example.com'
+
+config[:db] = {
+  host: 'rds',
+  username: 'ec2-user'
+}
+
+config[:db][:host]
+# => "rds"
+
+config.db.username
+# => "ec2-user"
+```
+
 `Hash` に変換
 
 ```ruby
