@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Goto Kei"]
   spec.email         = ["kgoto@zeneffect.co.jp"]
   spec.summary       = %q{The useful library for Rails}
-  spec.description   = %q{The useful library for Rails}
+  spec.description   = %q{It is a library of the functions to be common by the Rails projects that we developed.}
   spec.homepage      = "https://github.com/zeneffect/comodule"
   spec.license       = "MIT"
 
