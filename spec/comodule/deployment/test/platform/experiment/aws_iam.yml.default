@@ -1,0 +1,17 @@
+iam:
+  common:
+    access_key_id:     !str ACCESSKEYID
+    secret_access_key: !str secret
+  # if you want use different IAM to each API.
+  # cloud_formation:
+  #   access_key_id:     !str ACCESSKEYID
+  #   secret_access_key: !str secret
+  # sns:
+  #   access_key_id:     !str ACCESSKEYID
+  #   secret_access_key: !str secret
+  # rds:
+  #   access_key_id:     !str ACCESSKEYID
+  #   secret_access_key: !str secret
+  # ec2:
+  #   access_key_id:     !str ACCESSKEYID
+  #   secret_access_key: !str secret
