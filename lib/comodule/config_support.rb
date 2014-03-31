@@ -40,12 +40,39 @@ module Comodule::ConfigSupport
       send("#{directive}=", arg)
     end
 
-    def to_hash
-      hsh = {}
+    def merge(other_config)
+      self.class.combine(self, other_config)
+    end
+
+    alias + merge
+
+    def self.combine(config1, config2)
+      new_obj = new
+      config1.each do |key, value|
+        new_obj[key] = value
+      end
+      config2.each do |key, value|
+        if self === new_obj[key] && self === value
+          new_obj[key] = combine(new_obj[key], value)
+          next
+        end
+        new_obj[key] = value
+      end
+      new_obj
+    end
+
+    def each
       instance_variables.each do |variable_name|
         next if variable_name == :@configure_type
         key = variable_name.to_s.sub(/@/, '').to_sym
         value = instance_variable_get(variable_name)
+        yield key, value
+      end
+    end
+
+    def to_hash
+      hsh = {}
+      each do |key, value|
         value = value.to_hash if self.class === value
         hsh[key] = value
       end

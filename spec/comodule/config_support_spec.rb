@@ -2,6 +2,51 @@ require 'spec_helper'
 
 describe Comodule::ConfigSupport do
   describe '::Config' do
+    context '#+' do
+      it 'merge recusive' do
+        config = Comodule::ConfigSupport::Config.new(
+          host: 'example.com',
+          db: {
+            host: 'rds',
+            database: 'app_development',
+            username: 'ec2-user',
+            schedule: {
+              boot: '08-00-00',
+            }
+          }
+        )
+
+        config2 = Comodule::ConfigSupport::Config.new(
+          port: '3000',
+          db: {
+            host: 'rds',
+            password: 'secret',
+            schedule: {
+              shutdown: '22-00-00'
+            }
+          }
+        )
+
+        result = {
+          host: 'example.com',
+          port: '3000',
+          db: {
+            host: 'rds',
+            database: 'app_development',
+            username: 'ec2-user',
+            password: 'secret',
+            schedule: {
+              boot: '08-00-00',
+              shutdown: '22-00-00'
+            }
+          }
+        }
+
+        config += config2
+        expect(config.to_hash).to eq(result)
+      end
+    end
+
     context '#[], #[]=' do
       it 'like Hash' do
         config = Comodule::ConfigSupport::Config.new
