@@ -3,9 +3,7 @@ require 'aws-sdk'
 module Comodule::Deployment::Helper
   def yaml_to_config(path)
     ::Comodule::ConfigSupport::Config.new(
-      YAML.load(
-        File.read(path)
-      )
+      YAML.load( File.read(path) )
     )
   end
 
@@ -15,9 +13,9 @@ module Comodule::Deployment::Helper
   end
 
   class AwsSdk
-    def initialize(iam_config)
+    def initialize(access_credentials)
       @aws_sdk_object = {}
-      @iam_config = iam_config
+      @access_credentials = access_credentials
       @method_map = {}
       ::AWS.constants.each do |const_name|
         const = ::AWS.const_get(const_name)
@@ -30,7 +28,7 @@ module Comodule::Deployment::Helper
     def method_missing(method_name)
       if @method_map[method_name]
         return @aws_sdk_object[method_name] if @aws_sdk_object[method_name]
-        iam = @iam_config[:common] || @iam_config[method_name]
+        iam = @access_credentials[method_name] || @access_credentials[:common]
         if iam
           iam_hsh = iam.to_hash
           @aws_sdk_object[method_name] = @method_map[method_name].new(iam_hsh)

@@ -1,1 +1,2 @@
-/**/aws_iam.yml
+/**/secret/*
+/**/secret_config.yml
