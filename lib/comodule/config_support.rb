@@ -10,6 +10,9 @@ module Comodule::ConfigSupport
         end
         instance_variable_set "@#{directive}", value
       end
+      if block_given?
+        yield self
+      end
     end
 
     def method_missing(directive, arg=nil)
@@ -42,7 +45,9 @@ module Comodule::ConfigSupport
       instance_variables.each do |variable_name|
         next if variable_name == :@configure_type
         key = variable_name.to_s.sub(/@/, '').to_sym
-        hsh[key] = instance_variable_get(variable_name)
+        value = instance_variable_get(variable_name)
+        value = value.to_hash if self.class === value
+        hsh[key] = value
       end
       hsh
     end

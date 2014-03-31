@@ -28,6 +28,31 @@ describe Comodule::ConfigSupport do
     end
 
     context '#to_hash' do
+      it 'support recursive object' do
+        config = Comodule::ConfigSupport::Config.new(
+          configure_type: :hard,
+          host: 'example.com',
+          port: '3000',
+          db: {
+            host: 'rds',
+            database: 'app_development',
+            username: 'ec2-user',
+            password: 'secret'
+          }
+        )
+        hsh = config.to_hash
+        expect(hsh).to eq({
+          host: 'example.com',
+          port: '3000',
+          db: {
+            host: 'rds',
+            database: 'app_development',
+            username: 'ec2-user',
+            password: 'secret'
+          }
+        })
+      end
+
       it 'not include :cofigure_type' do
         config = Comodule::ConfigSupport::Config.new(
           configure_type: :hard,
@@ -44,6 +69,20 @@ describe Comodule::ConfigSupport do
     end
 
     context '.new' do
+      it 'support block' do
+        config = Comodule::ConfigSupport::Config.new do |config|
+          config.host = 'example.com'
+          config.port = '3000'
+          config.db = {
+            host: 'rds',
+            database: 'ec2-user',
+            password: 'secret'
+          }
+          expect(config.host).to eq('example.com')
+          expect(config.db.host).to eq('rds')
+        end
+      end
+
       it 'can specify each other configure_type to recursive object' do
         config = Comodule::ConfigSupport::Config.new(
           configure_type: :hard,
