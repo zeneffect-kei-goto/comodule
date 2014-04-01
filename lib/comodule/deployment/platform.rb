@@ -34,6 +34,64 @@ class Comodule::Deployment::Platform
     puts cfn.validate_template(template)
   end
 
+  def config_copy
+    return unless config.cp
+
+    count = 0
+
+    count += file_copy(config_dir)
+    count += file_copy(secret_config_dir)
+
+    return count
+  end
+
+
+  def file_copy(dir)
+    count = 0
+
+    paths = Dir.glob(File.join(dir, '**/*'))
+
+    order = config.cp.to_hash
+
+    order.each do |key, path_head|
+      wanted = %r|^#{File.join(dir, key.to_s)}|
+      paths.each do |file_path|
+        next unless File.file?(file_path)
+        next unless file_path =~ wanted
+        path_tail = file_path.sub(wanted, '')
+
+        path = File.join(path_head, path_tail)
+        path = File.join(test_dir, 'file_copy', path) if test?
+
+        dirname, filename = File.split(path)
+
+        be_dir(dirname)
+
+        if file_path =~ /\.erb$/
+          File.open(path.sub(/\.erb$/, ''), 'w') do |file|
+            file.write render(file_path)
+          end
+          next
+        end
+
+        FileUtils.cp file_path, "#{dirname}/"
+
+        count += 1
+      end
+    end
+
+    count
+  end
+
+
+  def config_dir
+    @config_dir ||= File.join(platform_dir, 'config')
+  end
+
+  def secret_config_dir
+    @secret_config_dir ||= File.join(platform_dir, 'secret_config')
+  end
+
   def config
     return @config if @config
 
@@ -68,16 +126,16 @@ class Comodule::Deployment::Platform
     @env = name
   end
 
+  def render(path)
+    ERB.new(File.read(path)).result(binding)
+  end
+
   def cloud_formation_template
     if block_given?
       yield config
     end
 
-    ERB.new(
-      File.read(
-        File.join(cloud_formation_dir, 'template.json.erb')
-      )
-    ).result(binding)
+    render(File.join(cloud_formation_dir, 'template.json.erb'))
   end
 
   def secret_dir
@@ -134,7 +192,7 @@ private
   end
 
   def production?
-    env.to_sym == :production
+    env && env.to_sym == :production
   end
 
   def test?

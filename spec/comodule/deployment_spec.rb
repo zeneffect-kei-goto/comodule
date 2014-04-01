@@ -16,6 +16,10 @@ describe Comodule::Deployment do
       )
     end
 
+    it 'file_copy' do
+      platform.config_copy
+    end
+
     # it '#upload' do
     #   platform.upload
     # end

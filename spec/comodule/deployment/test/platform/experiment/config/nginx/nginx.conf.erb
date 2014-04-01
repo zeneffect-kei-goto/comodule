@@ -1,0 +1,50 @@
+# For more information on configuration, see:
+#   * Official English Documentation: http://nginx.org/en/docs/
+#   * Official Russian Documentation: http://nginx.org/ru/docs/
+
+user  root;
+worker_processes  2;
+error_log  /var/log/nginx/error.log;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile       on;
+    tcp_nopush     on;
+
+    # keepalive_timeout  65;
+
+    send_timeout 480;
+
+    gzip on;
+    gzip_http_version 1.1;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_proxied any;
+    gzip_min_length 500;
+    gzip_disable "MSIE [1-6].(?!.*SV1)";
+    gzip_types text/plain text/css
+               text/xml application/xml application/xml+rss
+               text/comma-separated-values
+               text/javascript application/json application/x-javascript
+               application/atom+xml;
+    gzip_buffers 4 8k;
+
+    upstream app_name {
+        server unix:<%= config.rails_root %>/tmp/sockets/unicorn.sock;
+    }
+
+    include conf.d/*.conf;
+}
