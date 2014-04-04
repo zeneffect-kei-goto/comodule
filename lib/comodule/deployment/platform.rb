@@ -10,7 +10,43 @@ class Comodule::Deployment::Platform
     options[:db_host]  = db_host
   end
 
-  def create_stack
+  def create_stack(&block)
+    cfn = aws.cloud_formation
+
+    stack_name = []
+    stack_name << config.stack_name_prefix if config.stack_name_prefix
+    stack_name << platform
+    stack_name << Time.zone.now.strftime("%Y%m%d")
+
+    template = validate_template(&block)
+
+    stack = cfn.stacks.create(stack_name, template)
+
+    stack_name = stack.name
+    puts "Progress of creation stack: #{stack_name}"
+
+    File.open(File.join(cloud_formation_dir, 'stack'), 'w') do |file|
+      file.write stack_name
+    end
+
+    status = stack.status
+    before_status = ""
+
+    while status == "CREATION_IN_PROGRESS"
+      if status == before_status
+        before_status, status = status, ?.
+      else
+        before_status = status
+      end
+
+      print status
+
+      sleep 10
+
+      status = stack.status
+    end
+
+    puts "\n!!! #{stack.status} !!!\n"
   end
 
   def delete_stack
@@ -19,19 +55,22 @@ class Comodule::Deployment::Platform
   def validate_template(&block)
     cfn = aws.cloud_formation
 
-    dir = if test?
-      be_dir(File.join(test_dir, 'cloud_formation'))
-    else
-      cloud_formation_dir
-    end
+    template = cloud_formation_template(&block)
 
-    template = cloud_formation_template &block
+    template_path = File.join(cloud_formation_dir, 'template.json')
 
-    File.open(File.join(dir, 'template.json'), 'w') do |file|
+    File.open(template_path, 'w') do |file|
       file.write template
     end
 
-    puts cfn.validate_template(template)
+    result = cfn.validate_template(template)
+
+    puts "Validation result:"
+    result.each do |key, msg|
+      puts "  #{key}: #{msg}"
+    end
+
+    template
   end
 
   def config_copy
