@@ -9,6 +9,7 @@ class Comodule::Deployment::Platform
 
 
   def deploy
+    download
     config_copy
     shell_script
     crontab
@@ -16,12 +17,15 @@ class Comodule::Deployment::Platform
 
 
   def create_stack(&block)
+    upload
+
     cfn = aws.cloud_formation
 
     stack_name = []
     stack_name << config.stack_name_prefix if config.stack_name_prefix
     stack_name << platform
     stack_name << Time.zone.now.strftime("%Y%m%d")
+    stack_name = stack_name.join(?-)
 
     template = validate_template(&block)
 
@@ -75,7 +79,12 @@ class Comodule::Deployment::Platform
   end
 
   def stack_status_watch(stack, interval=10)
-    status = stack.status
+    begin
+      status = stack.status
+    rescue
+      return 'Missing stack'
+    end
+
     first_status = status
     before_status = ""
 
