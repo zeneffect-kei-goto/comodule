@@ -2,7 +2,10 @@ user_group: ec2-user
 user: ec2-user
 s3_bucket: example-comodule-deployment
 rails_root: &rails_root !str /root/projects/app_name
+app_name: hello_world
 
 cp:
   nginx: !str /etc/nginx
   rails: *rails_root
+
+# shell: /bin/bash

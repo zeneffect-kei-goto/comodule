@@ -12,8 +12,26 @@ describe Comodule::Deployment do
   describe '::Platform' do
     let(:platform) do
       Comodule::Deployment::Platform.new(
-        'experiment', platform_root
+        'experiment', root: platform_root
       )
+    end
+
+    it 'crontab' do
+      path = File.join(platform.crontab_tmp_dir, 'make_cache.txt')
+      cmd = "crontab #{path}"
+      platform.should_receive(:puts).with("set crontab:\n  #{cmd}")
+      platform.should_receive(:dummy).with(:`, "crontab #{path}")
+
+      result = platform.crontab
+      expect(result).to eq(1)
+    end
+
+    it 'shell_script' do
+      path = File.join(platform.shell_script_tmp_dir, 'test.sh')
+      platform.should_receive(:dummy).with(:`, "/bin/bash #{path}")
+
+      result = platform.shell_script
+      expect(result).to eq(1)
     end
 
     it 'file_copy' do
@@ -27,7 +45,7 @@ describe Comodule::Deployment do
     it '#validate_template' do
       cfn = platform.aws.cloud_formation
       result_template = "platform: experiment, user: ec2-user, group: ec2-user, ami: ami-001\n"
-      cfn.should_receive(:validate_template).with(result_template)
+      cfn.should_receive(:validate_template).with(result_template).and_return(validation_test: "success")
 
       file_path = File.join(platform_root, 'experiment', 'test', 'cloud_formation', 'template.json')
       if File.file?(file_path)
