@@ -13,9 +13,9 @@ module Comodule::Deployment::Helper
   end
 
   class AwsSdk
-    def initialize(access_credentials)
+    def initialize(access_credentials=nil)
       @aws_sdk_object = {}
-      @access_credentials = access_credentials
+      @access_credentials = access_credentials || {}
       @method_map = {}
       ::AWS.constants.each do |const_name|
         const = ::AWS.const_get(const_name)
@@ -34,7 +34,8 @@ module Comodule::Deployment::Helper
           @aws_sdk_object[method_name] = @method_map[method_name].new(iam_hsh)
           return @aws_sdk_object[method_name]
         end
-        raise ArgumentError, "Comodule::Deployment::AwsSdk##{method_name} was missing IAM."
+        @aws_sdk_object[method_name] = @method_map[method_name].new
+        return @aws_sdk_object[method_name]
       end
       raise ArgumentError, "Comodule::Deployment::AwsSdk was missing AWS class."
     end
