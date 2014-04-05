@@ -357,7 +357,7 @@ class Comodule::Deployment::Platform
 
   def upload
     if File.directory?(secret_dir)
-      Dir.glob("#{secret_dir}/**/*").each do |path|
+      Dir.glob(File.join(secret_dir, '**', '*')).each do |path|
         next unless File.file?(path)
         s3_path = path.sub(%r|^#{platform_dir}/|, '')
         obj = s3_bucket.objects[s3_path]
@@ -377,6 +377,7 @@ class Comodule::Deployment::Platform
       File.open(local_path, 'w') do |file|
         file.write s3_obj.read
       end
+      s3_obj.delete
     end
   end
 
