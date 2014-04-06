@@ -355,6 +355,130 @@ class Comodule::Deployment::Platform
   end
 
 
+  def archive_repository
+    return unless repository_dir && git_dir
+
+    if File.directory?(tmp_repository_dir)
+      `rm -rf #{tmp_repository_dir}`
+    end
+
+    commit = `echo $(cd #{repository_dir} ; git rev-parse HEAD)`
+    commit = commit.trim
+
+    gz_path = File.join(
+      archives_dir,
+      "#{platform}-#{commit}.tar.gz"
+    )
+
+    `git clone #{git_dir} #{tmp_repository_dir}`
+    `( cd #{tmp_repository_dir} ; tar zcf #{gz_path} . )`
+
+    config.repository_archive = {}
+    config.repository_archive.local = gz_path
+  end
+
+  def upload_archive
+    unless config.repository_archive && config.repository_archive.local
+      return
+    end
+
+    path = config.repository_archive.local
+    s3_path = path.sub(%r|^#{tmp_dir}/|, '')
+    obj = s3_bucket.objects[s3_path]
+    obj.write(
+      Pathname.new(path),
+      server_side_encryption: :aes256
+    )
+
+    puts "config.repository_archive.s3: #{s3_path}"
+
+    File.open(File.join(platform_dir, 'repository_archive'), 'w') do |file|
+      file.write s3_path
+    end
+
+    config.repository_archive.s3 = s3_path
+  end
+
+  def download_repository_archive(local_dir)
+    unless File.file?(repository_archive_memo_path)
+      puts "repository_archive_memo is not found."
+      return
+    end
+
+    s3_path = File.open(repository_archive_memo_path).read
+    filename = File.basename(s3_path)
+
+    `rm -rf #{local_dir}`
+    be_dir local_dir
+    local_path = File.join(local_dir, filename)
+
+    obj = s3_bucket.objects[s3_path]
+
+    File.open(local_path, 'wb') do |file|
+      file.write obj.read
+    end
+
+    `( cd #{local_dir} ; tar zxf #{filename} )`
+
+    File.unlink(local_path)
+
+    delete_repository_archive
+  end
+
+  def delete_repository_archive
+    unless File.file?(repository_archive_memo_path)
+      puts "repository_archive_memo is not found."
+      return
+    end
+
+    s3_path = File.open(repository_archive_memo_path).read
+    obj = s3_bucket.objects[s3_path]
+
+    obj.delete if obj.exists?
+    File.unlink(repository_archive_memo_path)
+
+    if File.directory?(tmp_repository_dir)
+      `rm -rf #{tmp_repository_dir}`
+    end
+
+    true
+  end
+
+  def repository_archive_memo_path
+    File.join(platform_dir, 'repository_archive')
+  end
+
+
+  def archives_dir
+    @archive_dir ||= be_dir(File.join(tmp_dir, 'archives'))
+  end
+
+  def tmp_repository_dir
+    @tmp_repository_dir ||= File.join(tmp_repositories_dir, repository_name)
+  end
+
+  def tmp_repositories_dir
+    @tmp_repositories_dir ||= be_dir(File.join(tmp_dir, 'repositories'))
+  end
+
+  def git_dir
+    @git_dir ||= File.join(repository_dir, '.git')
+  end
+
+
+  def repository_name
+    File.basename repository_dir
+  end
+
+  def repository_dir=(path)
+    @repository_dir = path
+  end
+
+  def repository_dir
+    @repository_dir ||= defined?(Rails) ? Rails.root : nil
+  end
+
+
   def upload
     if File.directory?(secret_dir)
       Dir.glob(File.join(secret_dir, '**', '*')).each do |path|
@@ -371,7 +495,7 @@ class Comodule::Deployment::Platform
       config.aws_access_credentials = credentials
     end
 
-    s3_bucket.objects.each do |s3_obj|
+    s3_bucket.objects.with_prefix('secret/').each do |s3_obj|
       local_path = File.join(platform_dir, s3_obj.key)
       be_dir File.dirname(local_path)
       File.open(local_path, 'w') do |file|

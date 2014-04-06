@@ -1,1 +1,0 @@
-platform: experiment, user: ec2-user, group: ec2-user, ami: ami-001
