@@ -24,7 +24,7 @@ class Comodule::Deployment::Platform
     stack_name = []
     stack_name << config.stack_name_prefix if config.stack_name_prefix
     stack_name << platform
-    stack_name << Time.zone.now.strftime("%Y%m%d")
+    stack_name << Time.now.strftime("%Y%m%d")
     stack_name = stack_name.join(?-)
 
     template = validate_template(&block)
@@ -396,7 +396,7 @@ class Comodule::Deployment::Platform
       file.write s3_path
     end
 
-    config.repository_archive.s3 = s3_path
+    config.repository_archive.s3 = obj.public_url(secure: true)
   end
 
   def download_repository_archive(local_dir)
@@ -480,13 +480,13 @@ class Comodule::Deployment::Platform
 
 
   def upload
-    if File.directory?(secret_dir)
-      Dir.glob(File.join(secret_dir, '**', '*')).each do |path|
-        next unless File.file?(path)
-        s3_path = path.sub(%r|^#{platform_dir}/|, '')
-        obj = s3_bucket.objects[s3_path]
-        obj.write Pathname.new(path), server_side_encryption: :aes256
-      end
+    return unless File.directory?(secret_config_dir)
+
+    Dir.glob(File.join(secret_config_dir, '**', '*')).each do |path|
+      next unless File.file?(path)
+      s3_path = path.sub(%r|^#{platform_dir}/|, '')
+      obj = s3_bucket.objects[s3_path]
+      obj.write Pathname.new(path), server_side_encryption: :aes256
     end
   end
 
@@ -495,7 +495,7 @@ class Comodule::Deployment::Platform
       config.aws_access_credentials = credentials
     end
 
-    s3_bucket.objects.with_prefix('secret/').each do |s3_obj|
+    s3_bucket.objects.with_prefix('secret_config/').each do |s3_obj|
       local_path = File.join(platform_dir, s3_obj.key)
       be_dir File.dirname(local_path)
       File.open(local_path, 'w') do |file|

@@ -1,5 +1,9 @@
 require 'spec_helper'
 
+# RSpec.configure do |c|
+#   c.filter = {focus: true}
+# end
+
 describe Comodule::Deployment do
   def test_dir
     File.expand_path('../deployment/test', __FILE__)
@@ -10,13 +14,20 @@ describe Comodule::Deployment do
   end
 
   describe '::Platform' do
-    describe 'deploy test' do
-      let(:platform) do
-        Comodule::Deployment::Platform.new(
-          'ami', root: platform_root
-        )
-      end
-    end
+    # describe 'deploy test' do
+    #   let(:platform) do
+    #     Comodule::Deployment::Platform.new(
+    #       'ami', root: platform_root
+    #     )
+    #   end
+
+    #   it 'deploy platform: ami', focus: true do
+    #     platform.repository_dir = File.join(test_dir, 'trial')
+    #     platform.archive_repository
+    #     platform.upload_archive
+    #     platform.create_stack
+    #   end
+    # end
 
     context 'methods' do
       let(:platform) do
@@ -25,29 +36,29 @@ describe Comodule::Deployment do
         )
       end
 
-      it '#upload_archive' do
-        platform.repository_dir = File.join(test_dir, 'trial')
+      # it '#upload_archive' do
+      #   platform.repository_dir = File.join(test_dir, 'trial')
 
-        local_path = platform.archive_repository
+      #   local_path = platform.archive_repository
 
-        expect(File.file?(local_path)).to eq(true)
+      #   expect(File.file?(local_path)).to eq(true)
 
-        s3_path = platform.upload_archive
-        filename = File.basename(s3_path)
+      #   s3_path = platform.upload_archive
+      #   filename = File.basename(s3_path)
 
-        s3_bucket = platform.s3_bucket
+      #   s3_bucket = platform.s3_bucket
 
-        expect(s3_bucket.objects[s3_path].exists?).to eq(true)
-        expect(File.file?(platform.repository_archive_memo_path)).to eq(true)
+      #   expect(s3_bucket.objects[s3_path].exists?).to eq(true)
+      #   expect(File.file?(platform.repository_archive_memo_path)).to eq(true)
 
-        result_dir = File.join(platform.tmp_dir, 'download_archive_result')
-        result_path = File.join(result_dir, filename)
-        platform.download_repository_archive(result_dir)
+      #   result_dir = File.join(platform.tmp_dir, 'download_archive_result')
+      #   result_path = File.join(result_dir, filename)
+      #   platform.download_repository_archive(result_dir)
 
-        expect(s3_bucket.objects[s3_path].exists?).to be_false
-        expect(File.file?(platform.repository_archive_memo_path)).to be_false
-        expect(File.file?(result_path)).to be_false
-      end
+      #   expect(s3_bucket.objects[s3_path].exists?).to be_false
+      #   expect(File.file?(platform.repository_archive_memo_path)).to be_false
+      #   expect(File.file?(result_path)).to be_false
+      # end
 
       it '#crontab' do
         path = File.join(platform.crontab_tmp_dir, 'make_cache.txt')
