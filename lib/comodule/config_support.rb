@@ -8,15 +8,22 @@ module Comodule::ConfigSupport
           value[:configure_type] ||= config_hash[:configure_type]
           value = self.class.new(value)
         end
-        instance_variable_set "@#{directive}", value
+        method_missing "#{directive}=", value
       end
       if block_given?
         yield self
       end
     end
 
+    def original_methods
+      @original_methods ||= methods + protected_methods + private_methods
+    end
+
     def method_missing(directive, arg=nil)
       if directive =~ /^(.+)=/
+        if original_methods.member?($1.to_sym)
+          raise ArgumentError, "You cannot use the directive name same as a member of Object#methods."
+        end
         arg = arg.to_sym if directive == :configure_type
         if Hash === arg
           arg[:configure_type] ||= configure_type
@@ -33,11 +40,11 @@ module Comodule::ConfigSupport
     end
 
     def [](directive)
-      send(directive)
+      method_missing(directive)
     end
 
     def []=(directive, arg)
-      send("#{directive}=", arg)
+      method_missing("#{directive}=", arg)
     end
 
     def merge(other_config)
@@ -63,7 +70,7 @@ module Comodule::ConfigSupport
 
     def each
       instance_variables.each do |variable_name|
-        next if variable_name == :@configure_type
+        next if variable_name == :@configure_type || variable_name == :@original_methods
         key = variable_name.to_s.sub(/@/, '').to_sym
         value = instance_variable_get(variable_name)
         yield key, value

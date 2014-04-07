@@ -1,6 +1,24 @@
 require 'spec_helper'
 
 describe Comodule::ConfigSupport do
+  describe 'cannot use the name same as a member of Object#methods' do
+    it do
+      hsh = {
+        host: 'example.com',
+        db: {
+          host: 'rds',
+          database: 'app_development',
+          username: 'ec2-user',
+          schedule: {
+            to_json: '08-00-00',
+          }
+        }
+      }
+      expect{Comodule::ConfigSupport::Config.new(hsh)}
+        .to raise_error(ArgumentError)
+    end
+  end
+
   describe '::Config' do
     context '#+' do
       it 'merge recusive' do
