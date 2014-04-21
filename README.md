@@ -6,6 +6,7 @@ comodule
 ## 概要
 
   * モジュール
+    * Deployment
     * ConfigSupport
     * UniArray
 
@@ -17,9 +18,68 @@ comodule
 
 ## モジュール
 
+### Deployment
+
+AWS CloudFormation を使って、AWS 上へのデプロイを容易にします。
+`Rails.root` の直下にデプロイに必要なファイルを格納する `platform` ディレクトリを作り、構築する環境の名前のディレクトリをその中に作ります。ここでは、`staging` とします。
+
+```ruby
+platform = Comodule::Deployment::Platfrom.new 'staging'
+
+# ローカルのソースを S3 に acl: :private でアップする。
+platform.archive_repository
+platform.upload_archive
+
+# スタックの作成
+platform.create_stack
+```
+
+これで `platform/cloud_formation/template.json.erb` を使って CloudFormation のスタックを作成します。この際、変数 `config` で `config.yml` または `secret_config.yml` で設定した項目にアクセスできます。
+例えば、
+
+```yaml
+stack_name_prefix: trial
+application: &application Trial
+project_root: !str /ec2-user/projects
+rails_root: !str /ec2-user/projects/trial
+
+ec2_instance:
+  instance_type: m3.medium
+  ami: ami-a1bec3a0
+  name: *application
+  key_name: ssh_key
+  iam_role: dev_master
+  security_group: aa-1a2b3c4d
+
+aws_access_credentials:
+  cloud_formation:
+    region: ap-northeast-1
+```
+
+```json
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "It creates a Rails stack.",
+
+  "Resources": {
+    "System": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": "<%= config.ec2_instance.instance_type %>",
+        "ImageId": "<%= config.ec2_instance.ami %>",
+        "KeyName": "<%= config.ec2_instance.key_name %>",
+        "IamInstanceProfile": { "Ref": "InstanceProfile" },
+        "SecurityGroupIds": ["<%= config.ec2_instance.security_group %>"],
+        "Tags": [{"Key": "Name", "Value": "<%= config.ec2_instance.name %>"}],
+      }
+    }
+  }
+}
+```
+
 ### ConfigSupport
 
-定義なしにアトリビュートを保存できる初期情報などを扱うのに適した汎用オブジェクト。
+定義なしにアトリビュートを保存できる初期情報などを扱うのに適した汎用オブジェクトです。
 
 ```ruby
 config = Comodule::ConfigSupport::Config.new
@@ -31,6 +91,15 @@ config.host
 
 config.port
 # => "3000"
+```
+
+但し、あくまでも `Object` のサブクラスなので、`Object#methods`, `Object#protected_methods`, `Object#private_methods` に含まれる名前のディレクティブを作ることはできません。
+
+```ruby
+config = Comodule::ConfigSupport::Config.new(
+  system: 'app_name'
+)
+# => ArgumentError
 ```
 
 デフォルトでは、設定されていないディレクティブは nil を返します。
@@ -101,6 +170,51 @@ config.db.username
 ```ruby
 config.to_hash
 # => {:host=>"example.com", :port=>"3000"}
+```
+
+`#merge` で二つの `Config` オブジェクトをマージできます。`#+()` はそのエイリアスです。マージは再帰的に行われます。
+
+```ruby
+config = Comodule::ConfigSupport::Config.new(
+  host: 'example.com',
+  db: {
+    host: 'rds',
+    database: 'app_development',
+    username: 'ec2-user',
+    schedule: {
+      boot: '08-00-00',
+    }
+  }
+)
+
+config2 = Comodule::ConfigSupport::Config.new(
+  port: '3000',
+  db: {
+    host: 'rds',
+    password: 'secret',
+    schedule: {
+      shutdown: '22-00-00'
+    }
+  }
+)
+
+config = config1 + config2
+
+config.to_hash
+# => {
+  host: 'example.com',
+  port: '3000',
+  db: {
+    host: 'rds',
+    database: 'app_development',
+    username: 'ec2-user',
+    password: 'secret',
+    schedule: {
+      boot: '08-00-00',
+      shutdown: '22-00-00'
+    }
+  }
+}
 ```
 
 ### UniArray
