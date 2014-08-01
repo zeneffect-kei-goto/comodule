@@ -8,7 +8,6 @@ module Comodule
   autoload :Deployment,     'comodule/deployment'
 
   module CustomizeClass
-    autoload :HashCustom,   'comodule/customize_class/hash_custom'
     autoload :StringCustom, 'comodule/customize_class/string_custom'
   end
 
