@@ -11,8 +11,6 @@ comodule
     * UniArray
 
   * クラスの拡張
-    * Hash
-      * pullout, pullout!
     * String
       * standardize
 
@@ -273,46 +271,6 @@ Comodule::CustomizeClass.customize
 
 として、読み込みます。このメソッドは複数回呼び出すとエラーになりますので、気をつけてください。
 尚、Comodule は既存のメソッドをオーバーライドできません。
-
-### Hash
-
-#### pullout, pullout!
-
-ハッシュから指定要素を抜き出して新しいハッシュを返す。
-
-```ruby
-hsh = {
-  date: "20130322",
-  title: "The Tell-Tale Brain",
-  secret_token: "it-is-secret"
-}
-result_hsh = hsh.pullout(:date, :title)
-# => {date: "20130322", title: "The Tell-Tale Brain"}
-```
-
-デフォルトでは未定義の要素は無視します。
-
-```ruby
-hsh = {
-  date: "20130322",
-  title: "The Tell-Tale Brain",
-  secret_token: "it-is-secret"
-}
-result_hsh = hsh.pullout(:date, :title, :author)
-# => {date: "20130322", title: "The Tell-Tale Brain"}
-```
-
-未定義要素へのアクセス時に例外を挙げたいときは `pullout!` を使います。
-
-```ruby
-hsh = {
-  date: "20130322",
-  title: "The Tell-Tale Brain",
-  secret_token: "it-is-secret"
-}
-result_hsh = hsh.pullout!(:date, :title, :author)
-# => ArgumentError: Comodule::CustomizeClass::HashCustom cannot find key 'author' is a Symbol.
-```
 
 ### String
 
