@@ -21,6 +21,7 @@ module Comodule
       autoload :SystemUtility, 'comodule/deployment/helper/system_utility'
       autoload :Aws,           'comodule/deployment/helper/aws'
       autoload :ShellCommand,  'comodule/deployment/helper/shell_command'
+      autoload :Uploader,      'comodule/deployment/helper/uploader'
 
       module Aws
         autoload :Base,           'comodule/deployment/helper/aws/base'
