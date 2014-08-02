@@ -133,7 +133,7 @@ class Comodule::Deployment::Platform
 
     template = cloud_formation_template(&block)
 
-    template_path = if production?
+    template_path = if deployment?
       File.join(cloud_formation_dir, 'template.json')
     else
       File.join(cloud_formation_test_dir, 'template.json')
@@ -179,7 +179,7 @@ class Comodule::Deployment::Platform
       cmd = "crontab #{file_path}"
       puts "set crontab:\n  #{cmd}"
 
-      if production?
+      if deployment?
         `#{cmd}`
       else
         dummy :`, cmd
@@ -294,12 +294,8 @@ class Comodule::Deployment::Platform
   end
 
 
-  def env
-    @env || (defined?(Rails) ? Rails.env : nil)
   end
 
-  def env=(name)
-    @env = name
   end
 
 
@@ -462,14 +458,28 @@ class Comodule::Deployment::Platform
   end
 
 
+  def env
+    return @env if @env
+    self.env = defined?(Rails) ? Rails.env : nil
+  end
+
+  def env=(name)
+    return if !name || name.empty?
+    @env = name.to_sym
+  end
+
 private
 
   def production?
-    env && env.to_sym == :production
+    env && !env.empty? && env == :production
+  end
+
+  def deployment?
+    env && !env.empty? && env != :test && env != :development
   end
 
   def test?
-    !production?
+    !deployment?
   end
 
   def cloud_formation_dir
