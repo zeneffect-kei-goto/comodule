@@ -96,7 +96,7 @@ describe Comodule::Deployment do
           File.unlink(file_path)
         end
 
-        template = platform.validate_template do |config|
+        template = platform.cloud_formation.validate_template do |config|
           config.ami = 'ami-001'
         end
 

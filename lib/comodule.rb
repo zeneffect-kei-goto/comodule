@@ -22,8 +22,9 @@ module Comodule
       autoload :Aws,           'comodule/deployment/helper/aws'
 
       module Aws
-        autoload :Base, 'comodule/deployment/helper/aws/base'
-        autoload :Sdk,  'comodule/deployment/helper/aws/sdk'
+        autoload :Base,           'comodule/deployment/helper/aws/base'
+        autoload :Sdk,            'comodule/deployment/helper/aws/sdk'
+        autoload :CloudFormation, 'comodule/deployment/helper/aws/cloud_formation'
       end
     end
   end

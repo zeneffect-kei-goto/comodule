@@ -3,7 +3,7 @@ require 'aws-sdk'
 module Comodule::Deployment::Helper::Aws
 
   def self.included(receiver)
-    receiver.send :include, Service
+    receiver.send :include, Service, CloudFormation
   end
 
   module Service
