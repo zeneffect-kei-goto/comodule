@@ -193,30 +193,33 @@ secret_config.yml
   def crontab
     count = 0
 
-    paths  = Dir.glob(File.join(crontab_dir, '**', '*'))
+    paths  = Dir.glob(File.join(common_crontab_dir, '**', '*'))
+    paths += Dir.glob(File.join(crontab_dir, '**', '*'))
     paths += Dir.glob(File.join(secret_crontab_dir, '**', '*'))
 
-    File.unlink(*Dir.glob(File.join(crontab_tmp_dir, '*')))
-    paths.each do |file_path|
-      next unless File.file?(file_path)
+    `rm -rf #{crontab_tmp_dir}`
+    be_dir crontab_tmp_dir
 
-      if file_path =~ /\.erb$/
-        file_path = render_in_tmp(file_path, crontab_tmp_dir)
+    paths.each do |path|
+      next unless File.file?(path)
+
+      if path =~ /\.erb$/
+        path = render_in_tmp(path, crontab_tmp_dir)
       end
 
-      cmd = "crontab #{file_path}"
+      cmd = "crontab #{path}"
       puts "set crontab:\n  #{cmd}"
 
-      if deployment?
-        `#{cmd}`
-      else
-        dummy :`, cmd
-      end
+      command_or_dummy cmd
 
-      count +=1
+      count += 1
     end
 
     count
+  end
+
+  def common_crontab_dir
+    @common_crontab_dir ||= File.join(common_config_dir, 'crontab')
   end
 
   def crontab_dir
@@ -228,9 +231,7 @@ secret_config.yml
   end
 
   def crontab_tmp_dir
-    return @crontab_tmp_dir if @crontab_tmp_dir
-
-    @crontab_tmp_dir = be_dir(File.join(tmp_dir, 'crontab'))
+    @crontab_tmp_dir ||= File.join(tmp_dir, 'crontab')
   end
 
 
