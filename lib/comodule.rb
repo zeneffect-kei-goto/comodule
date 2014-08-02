@@ -19,6 +19,12 @@ module Comodule
     module Helper
       autoload :Base,          'comodule/deployment/helper/base'
       autoload :SystemUtility, 'comodule/deployment/helper/system_utility'
+      autoload :Aws,           'comodule/deployment/helper/aws'
+
+      module Aws
+        autoload :Base, 'comodule/deployment/helper/aws/base'
+        autoload :Sdk,  'comodule/deployment/helper/aws/sdk'
+      end
     end
   end
 end
