@@ -1,10 +1,27 @@
 class Comodule::Deployment::Platform
+  include ::Comodule::Deployment::Base
   include ::Comodule::Deployment::Helper
 
   def initialize(name, hsh={})
+    if ['config', 'secret_config'].member?(name)
+      raise ArgumentError, %Q|Don't use the platform name [#{name}].|
+    end
+
     @platform = name
-    @platform_root = hsh[:root] if hsh[:root]
-    config.db_host = hsh[:db_host] if hsh[:db_host]
+    @project_root = hsh[:project_root] if hsh[:project_root]
+
+    if hsh[:db_host]
+      config.db ||= {}
+      config.db.host = hsh[:db_host]
+    end
+
+    if hsh[:db_password]
+      config.db ||= {}
+      config.db.password = hsh[:db_password]
+    end
+
+    self.env = hsh[:RAILS_ENV].to_sym if hsh[:RAILS_ENV]
+    self.env = hsh[:env].to_sym if hsh[:env]
   end
 
 
@@ -144,22 +161,6 @@ class Comodule::Deployment::Platform
     render(File.join(cloud_formation_dir, 'template.json.erb'))
   end
 
-  def render(path)
-    ERB.new(File.read(path)).result(binding)
-  end
-
-  def render_in_tmp(file_path, tmp_dir)
-    return unless file_path =~ /\.erb$/
-
-    dir, filename = File.split(file_path)
-    tmp_path = File.join(tmp_dir, filename.sub(/\.erb$/, ''))
-    File.open(tmp_path, 'w') do |file|
-      file.write render(file_path)
-    end
-
-    tmp_path
-  end
-
 
   def crontab
     count = 0
@@ -205,11 +206,6 @@ class Comodule::Deployment::Platform
   end
 
 
-  def dummy(method_name, *args)
-    puts "execute dummy method: #{method_name}, args: #{args}"
-  end
-
-
   def shell_script
     count = 0
 
@@ -226,13 +222,7 @@ class Comodule::Deployment::Platform
         file_path = render_in_tmp(file_path, shell_script_tmp_dir)
       end
 
-      cmd = "#{shell_path} #{file_path}"
-
-      if production?
-        `#{shell_path} #{file_path}`
-      else
-        dummy :`, cmd
-      end
+      command_or_dummy "#{shell_path} #{file_path}"
 
       count += 1
     end
@@ -252,12 +242,6 @@ class Comodule::Deployment::Platform
     return @shell_script_tmp_dir if @shell_script_tmp_dir
 
     @shell_script_tmp_dir = be_dir(File.join(tmp_dir, 'shell_script'))
-  end
-
-  def tmp_dir
-    return @tmp_dir if @tmp_dir
-
-    @tmp_dir = be_dir(File.join(platform_dir, 'tmp'))
   end
 
 
@@ -307,33 +291,6 @@ class Comodule::Deployment::Platform
     end
 
     count
-  end
-
-
-  def config
-    return @config if @config
-
-    @config = yaml_to_config(config_path)
-
-    @config += yaml_to_config(secret_config_path) if File.file?(secret_config_path)
-
-    @config
-  end
-
-  def config_dir
-    @config_dir ||= File.join(platform_dir, 'config')
-  end
-
-  def secret_config_dir
-    @secret_config_dir ||= File.join(platform_dir, 'secret_config')
-  end
-
-  def config_path
-    @config_path ||= File.join(platform_dir, 'config.yml')
-  end
-
-  def secret_config_path
-    @secret_config_path ||= File.join(platform_dir, 'secret_config.yml')
   end
 
 
@@ -449,20 +406,12 @@ class Comodule::Deployment::Platform
   end
 
 
-  def archives_dir
-    @archive_dir ||= be_dir(File.join(tmp_dir, 'archives'))
-  end
-
   def tmp_repository_dir
     @tmp_repository_dir ||= File.join(tmp_repositories_dir, repository_name)
   end
 
   def tmp_repositories_dir
     @tmp_repositories_dir ||= be_dir(File.join(tmp_dir, 'repositories'))
-  end
-
-  def git_dir
-    @git_dir ||= File.join(repository_dir, '.git')
   end
 
 
@@ -524,11 +473,6 @@ class Comodule::Deployment::Platform
 
 private
 
-  def test_dir
-    return @test_dir if @test_dir
-    @test_dir = be_dir(File.join(platform_dir, 'test'))
-  end
-
   def production?
     env && env.to_sym == :production
   end
@@ -547,29 +491,5 @@ private
     return @cloud_formation_test_dir if @cloud_formation_test_dir
 
     @cloud_formation_test_dir = be_dir(File.join(test_dir, 'cloud_formation'))
-  end
-
-  def platform_dir
-    @platform_dir ||= File.join(platform_root, platform)
-  end
-
-  def platform
-    @platform
-  end
-
-  def platform_root
-    return @platform_root if @platform_root
-
-    if defined?(Rails)
-      dir = File.join(Rails.root, 'platform')
-      if File.directory?(dir)
-        @platform_root = dir
-      end
-    end
-
-    unless @platform_root
-      raise ArgumentError, "Comodule::Deployment.platform_root is missing directory."
-    end
-    @platform_root
   end
 end
