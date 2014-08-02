@@ -330,150 +330,139 @@ secret_config.yml
   end
 
 
+  def upload_project
+    upload_archive archive_project
   end
 
+  def project_stamp
+    branch = `echo $(cd #{project_dir} ; git rev-parse --abbrev-ref HEAD)`.strip
+    commit = `echo $(cd #{project_dir} ; git rev-parse HEAD)`.strip
+    "branch: #{branch}\n" + "commit: #{commit}\n"
   end
 
+  def archive_path
+    File.join archives_dir, "#{platform}.tar.gz"
+  end
 
-  def archive_repository
-    return unless repository_dir && git_dir
+  def archive_s3_path
+    archive_path.sub %r|^#{tmp_dir}/|, ''
+  end
 
-    if File.directory?(tmp_repository_dir)
-      `rm -rf #{tmp_repository_dir}`
+  def archive_s3_public_url
+    s3_bucket.objects[archive_s3_path].public_url secure: true
+  end
+
+  def download_project
+    local_dir = File.join(test_dir, 'download_archive')
+    `rm -rf #{local_dir}`
+    be_dir local_dir
+
+    s3_path = archive_s3_path
+    filename = File.basename(s3_path)
+    local_path = File.join(local_dir, filename)
+
+    File.open(local_path, 'wb') do |file|
+      file.write s3_bucket.objects[s3_path].read
     end
 
-    commit = `echo $(cd #{repository_dir} ; git rev-parse HEAD)`
-    commit = commit.trim
+    `( cd #{local_dir} ; tar xfz #{filename} )`
 
-    gz_path = File.join(
-      archives_dir,
-      "#{platform}-#{commit}.tar.gz"
-    )
-
-    `git clone #{git_dir} #{tmp_repository_dir}`
-    `( cd #{tmp_repository_dir} ; tar zcf #{gz_path} . )`
-
-    config.repository_archive = {}
-    config.repository_archive.local = gz_path
+    File.unlink(local_path)
   end
 
-  def upload_archive
-    unless config.repository_archive && config.repository_archive.local
+  def archive_project
+    unless File.directory?(git_dir)
+      puts ".git not found"
       return
     end
 
-    path = config.repository_archive.local
-    s3_path = path.sub(%r|^#{tmp_dir}/|, '')
+    `rm -rf #{tmp_project_dir}`
+
+    `git clone #{git_dir} #{tmp_project_dir}`
+    `rm -rf #{File.join(tmp_project_dir, '.git')}` if config.upload_project == 'without_git'
+
+    File.open(File.join(tmp_project_dir, 'project_stamp.txt'), 'w') do |file|
+      file.write project_stamp
+    end
+
+    gz_path = archive_path
+    `( cd #{tmp_project_dir} ; tar cfz #{gz_path} . )`
+
+    gz_path
+  end
+
+  def upload_archive(path = archive_path)
+    s3_path = archive_s3_path
     obj = s3_bucket.objects[s3_path]
     obj.write(
       Pathname.new(path),
       server_side_encryption: :aes256
     )
-
-    puts "config.repository_archive.s3: #{s3_path}"
-
-    File.open(File.join(platform_dir, 'repository_archive'), 'w') do |file|
-      file.write s3_path
-    end
-
-    config.repository_archive.s3 = obj.public_url(secure: true)
-  end
-
-  def download_repository_archive(local_dir)
-    unless File.file?(repository_archive_memo_path)
-      puts "repository_archive_memo is not found."
-      return
-    end
-
-    s3_path = File.open(repository_archive_memo_path).read
-    filename = File.basename(s3_path)
-
-    `rm -rf #{local_dir}`
-    be_dir local_dir
-    local_path = File.join(local_dir, filename)
-
-    obj = s3_bucket.objects[s3_path]
-
-    File.open(local_path, 'wb') do |file|
-      file.write obj.read
-    end
-
-    `( cd #{local_dir} ; tar zxf #{filename} )`
-
-    File.unlink(local_path)
-
-    delete_repository_archive
-  end
-
-  def delete_repository_archive
-    unless File.file?(repository_archive_memo_path)
-      puts "repository_archive_memo is not found."
-      return
-    end
-
-    s3_path = File.open(repository_archive_memo_path).read
-    obj = s3_bucket.objects[s3_path]
-
-    obj.delete if obj.exists?
-    File.unlink(repository_archive_memo_path)
-
-    if File.directory?(tmp_repository_dir)
-      `rm -rf #{tmp_repository_dir}`
-    end
-
-    true
-  end
-
-  def repository_archive_memo_path
-    File.join(platform_dir, 'repository_archive')
   end
 
 
-  def tmp_repository_dir
-    @tmp_repository_dir ||= File.join(tmp_repositories_dir, repository_name)
+  def secret_files
+    Dir.glob(File.join(common_secret_config_dir, '**', '*')) |
+    Dir.glob(File.join(secret_config_dir, '**', '*')) <<
+    File.join(common_secret_config_path) <<
+    File.join(secret_config_path)
   end
 
-  def tmp_repositories_dir
-    @tmp_repositories_dir ||= be_dir(File.join(tmp_dir, 'repositories'))
+  def upload_test
+    original, self.env = env, :test
+    upload
+    self.env = original
   end
-
-
-  def repository_name
-    File.basename repository_dir
-  end
-
-  def repository_dir=(path)
-    @repository_dir = path
-  end
-
-  def repository_dir
-    @repository_dir ||= defined?(Rails) ? Rails.root : nil
-  end
-
 
   def upload
-    return unless File.directory?(secret_config_dir)
+    return unless config.s3_bucket
 
-    Dir.glob(File.join(secret_config_dir, '**', '*')).each do |path|
+    if env == :test
+      test_upload_dir = File.join(test_dir, 'upload_secret_files')
+      `rm -rf #{test_upload_dir}`
+      be_dir test_upload_dir
+    else
+      s3_bucket.objects.with_prefix("#{platform}/").delete_all
+    end
+
+    secret_files.each do |path|
       next unless File.file?(path)
-      s3_path = path.sub(%r|^#{platform_dir}/|, '')
-      obj = s3_bucket.objects[s3_path]
-      obj.write Pathname.new(path), server_side_encryption: :aes256
+
+      s3_path = path.sub(%r|^#{File.dirname(platform_root)}/|, "#{platform}/")
+
+      if env == :test
+        dir = File.dirname(File.join(test_upload_dir, s3_path))
+        be_dir dir
+        FileUtils.cp path, dir
+      else
+        obj = s3_bucket.objects[s3_path]
+        obj.write Pathname.new(path), server_side_encryption: :aes256
+      end
     end
   end
 
-  def download(credentials=nil)
-    if credentials
-      config.aws_access_credentials = credentials
+  def download
+    return unless config.s3_bucket
+
+    if test?
+      test_download_dir = File.join(test_dir, 'download_secret_files')
+      `rm -rf #{test_download_dir}`
+      be_dir test_download_dir
     end
 
-    s3_bucket.objects.with_prefix('secret_config/').each do |s3_obj|
-      local_path = File.join(platform_dir, s3_obj.key)
+    s3_bucket.objects.with_prefix("#{platform}/").each do |s3_obj|
+      local_path =
+        unless test?
+          s3_obj.key.sub(%r|^#{platform}/platform|, platform_root)
+        else
+          s3_obj.key.sub(%r|^#{platform}/platform|, test_download_dir)
+        end
+
       be_dir File.dirname(local_path)
+
       File.open(local_path, 'w') do |file|
         file.write s3_obj.read
       end
-      s3_obj.delete
     end
   end
 
