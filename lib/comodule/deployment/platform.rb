@@ -24,6 +24,35 @@ class Comodule::Deployment::Platform
     self.env = hsh[:env].to_sym if hsh[:env]
   end
 
+  def create_platform
+    be_dir(platform_root, platform_dir, cloud_formation_dir, config_dir, secret_config_dir)
+
+    be_file(
+      File.join(cloud_formation_dir, '.keep'),
+      File.join(config_dir, '.keep'),
+      config_path,
+      "#{secret_config_path}.default"
+    )
+
+    gitignore_path = File.join(platform_root, '.gitignore')
+
+    unless File.file?(gitignore_path)
+      File.open(gitignore_path, 'w') do |file|
+        file.write <<-HERE
+/**/test
+/**/tmp
+/**/secret_config/*
+/**/secret_config.yml
+/**/stack
+secret_config/*
+secret_config.yml
+        HERE
+      end
+    end
+
+    nil
+  end
+
 
   def deploy
     download
