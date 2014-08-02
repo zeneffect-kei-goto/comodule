@@ -56,6 +56,7 @@ secret_config.yml
 
   def deploy
     download
+    @config = nil
     config_copy
     chown
     shell_script
