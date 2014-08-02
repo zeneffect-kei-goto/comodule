@@ -55,7 +55,7 @@ module Comodule::Deployment::Helper::SystemUtility
     end
 
     def command_or_dummy(cmd)
-      if production?
+      if deployment?
         `#{cmd}`
       else
         dummy :`, cmd
