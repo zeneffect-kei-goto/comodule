@@ -57,6 +57,7 @@ secret_config.yml
   def deploy
     download
     config_copy
+    chown
     shell_script
     crontab
   end
@@ -187,6 +188,15 @@ secret_config.yml
     common_file = File.join(common_cloud_formation_dir, 'template.json.erb')
 
     render( File.file?(file) ? file : common_file )
+  end
+
+
+  def chown
+    return unless config.chown
+
+    [config.chown].flatten.each do |arg|
+      command_or_dummy "chown #{arg}"
+    end
   end
 
 
