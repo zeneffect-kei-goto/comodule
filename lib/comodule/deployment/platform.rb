@@ -238,12 +238,14 @@ secret_config.yml
   def shell_script
     count = 0
 
-    paths  = Dir.glob(File.join(shell_script_dir, '**', '*'))
+    paths  = Dir.glob(File.join(common_shell_script_dir, '**', '*'))
+    paths += Dir.glob(File.join(shell_script_dir, '**', '*'))
     paths += Dir.glob(File.join(secret_shell_script_dir, '**', '*'))
 
     shell_path = config.shell || '/bin/bash'
 
-    File.unlink(*Dir.glob(File.join(shell_script_tmp_dir, '*')))
+    `rm -rf #{shell_script_tmp_dir}`
+    be_dir shell_script_tmp_dir
     paths.each do |file_path|
       next unless File.file?(file_path)
 
@@ -259,6 +261,10 @@ secret_config.yml
     count
   end
 
+  def common_shell_script_dir
+    @common_shell_script_dir ||= File.join(common_config_dir, 'shell_script')
+  end
+
   def shell_script_dir
     @shell_script_dir ||= File.join(config_dir, 'shell_script')
   end
@@ -268,9 +274,7 @@ secret_config.yml
   end
 
   def shell_script_tmp_dir
-    return @shell_script_tmp_dir if @shell_script_tmp_dir
-
-    @shell_script_tmp_dir = be_dir(File.join(tmp_dir, 'shell_script'))
+    @shell_script_tmp_dir ||= File.join(tmp_dir, 'shell_script')
   end
 
 
