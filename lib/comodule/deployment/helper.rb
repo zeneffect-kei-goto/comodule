@@ -1,16 +1,6 @@
 require 'aws-sdk'
 
 module Comodule::Deployment::Helper
-  def yaml_to_config(path)
-    ::Comodule::ConfigSupport::Config.new(
-      YAML.load( File.read(path) )
-    )
-  end
-
-  def be_dir(dir)
-    FileUtils.mkdir_p dir unless File.directory?(dir)
-    dir
-  end
 
   class AwsSdk
     def initialize(access_credentials=nil)

@@ -12,7 +12,13 @@ module Comodule
   end
 
   module Deployment
+    autoload :Base,     'comodule/deployment/base'
     autoload :Platform, 'comodule/deployment/platform'
     autoload :Helper,   'comodule/deployment/helper'
+
+    module Helper
+      autoload :Base,          'comodule/deployment/helper/base'
+      autoload :SystemUtility, 'comodule/deployment/helper/system_utility'
+    end
   end
 end

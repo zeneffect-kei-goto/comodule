@@ -9,8 +9,12 @@ describe Comodule::Deployment do
     File.expand_path('../deployment/test', __FILE__)
   end
 
+  def project_root
+    File.join(test_dir, 'trial')
+  end
+
   def platform_root
-    File.join(test_dir, 'trial', 'platform')
+    File.join(project_root, 'platform')
   end
 
   describe '::Platform' do
@@ -32,7 +36,7 @@ describe Comodule::Deployment do
     context 'methods' do
       let(:platform) do
         Comodule::Deployment::Platform.new(
-          'experiment', root: platform_root
+          'experiment', project_root: project_root
         )
       end
 
