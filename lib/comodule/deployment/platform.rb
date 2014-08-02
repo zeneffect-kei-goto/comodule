@@ -162,11 +162,7 @@ secret_config.yml
 
     template = cloud_formation_template(&block)
 
-    template_path = if deployment?
-      File.join(cloud_formation_dir, 'template.json')
-    else
-      File.join(cloud_formation_test_dir, 'template.json')
-    end
+    template_path = File.join(cloud_formation_test_dir, 'template.json')
 
     File.open(template_path, 'w') do |file|
       file.write template
@@ -187,7 +183,10 @@ secret_config.yml
       yield config
     end
 
-    render(File.join(cloud_formation_dir, 'template.json.erb'))
+    file = File.join(cloud_formation_dir, 'template.json.erb')
+    common_file = File.join(common_cloud_formation_dir, 'template.json.erb')
+
+    render( File.file?(file) ? file : common_file )
   end
 
 
@@ -520,14 +519,14 @@ private
   end
 
   def cloud_formation_dir
-    return @cloud_formation_dir if @cloud_formation_dir
+    @cloud_formation_dir ||= be_dir(File.join(platform_dir, 'cloud_formation'))
+  end
 
-    @cloud_formation_dir = be_dir(File.join(platform_dir, 'cloud_formation'))
+  def common_cloud_formation_dir
+    @common_cloud_formation_dir ||= be_dir(File.join(platform_root, 'cloud_formation'))
   end
 
   def cloud_formation_test_dir
-    return @cloud_formation_test_dir if @cloud_formation_test_dir
-
-    @cloud_formation_test_dir = be_dir(File.join(test_dir, 'cloud_formation'))
+    @cloud_formation_test_dir ||= be_dir(File.join(test_dir, 'cloud_formation'))
   end
 end
