@@ -277,8 +277,12 @@ secret_config.yml
   def config_copy
     return unless config.cp
 
+    `rm -rf #{test_dir}/file_copy` if test?
+
     count = 0
 
+    count += file_copy(common_config_dir)
+    count += file_copy(common_secret_config_dir)
     count += file_copy(config_dir)
     count += file_copy(secret_config_dir)
 
@@ -292,30 +296,34 @@ secret_config.yml
 
     order = config.cp.to_hash
 
-    order.each do |key, path_head|
-      wanted = %r|^#{File.join(dir, key.to_s)}|
-      paths.each do |file_path|
-        next unless File.file?(file_path)
-        next unless file_path =~ wanted
-        path_tail = file_path.sub(wanted, '')
+    order.each do |key, path_head_list|
 
-        path = File.join(path_head, path_tail)
-        path = File.join(test_dir, 'file_copy', path) if test?
+      [path_head_list].flatten.each do |path_head|
+        wanted = %r|^#{File.join(dir, key.to_s)}|
 
-        dirname, filename = File.split(path)
+        paths.each do |file_path|
+          next unless File.file?(file_path)
+          next unless file_path =~ wanted
 
-        be_dir(dirname)
+          path_tail = file_path.sub(wanted, '')
 
-        if file_path =~ /\.erb$/
-          File.open(path.sub(/\.erb$/, ''), 'w') do |file|
-            file.write render(file_path)
+          path = File.join(path_head, path_tail)
+          path = File.join(test_dir, 'file_copy', path) if test?
+
+          dirname, filename = File.split(path)
+
+          be_dir(dirname)
+
+          if file_path =~ /\.erb$/
+            File.open(path.sub(/\.erb$/, ''), 'w') do |file|
+              file.write render(file_path)
+            end
+          else
+            FileUtils.cp file_path, "#{dirname}/"
           end
-          next
+
+          count += 1
         end
-
-        FileUtils.cp file_path, "#{dirname}/"
-
-        count += 1
       end
     end
 
