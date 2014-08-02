@@ -166,7 +166,6 @@ secret_config.yml
     status
   end
 
-
   def validate_template(&block)
     cfn = aws.cloud_formation
 
@@ -197,6 +196,18 @@ secret_config.yml
     common_file = File.join(common_cloud_formation_dir, 'template.json.erb')
 
     render( File.file?(file) ? file : common_file )
+  end
+
+  def cloud_formation_dir
+    @cloud_formation_dir ||= be_dir(File.join(platform_dir, 'cloud_formation'))
+  end
+
+  def common_cloud_formation_dir
+    @common_cloud_formation_dir ||= be_dir(File.join(platform_root, 'cloud_formation'))
+  end
+
+  def cloud_formation_test_dir
+    @cloud_formation_test_dir ||= be_dir(File.join(test_dir, 'cloud_formation'))
   end
 
 
@@ -529,17 +540,5 @@ private
 
   def test?
     !deployment?
-  end
-
-  def cloud_formation_dir
-    @cloud_formation_dir ||= be_dir(File.join(platform_dir, 'cloud_formation'))
-  end
-
-  def common_cloud_formation_dir
-    @common_cloud_formation_dir ||= be_dir(File.join(platform_root, 'cloud_formation'))
-  end
-
-  def cloud_formation_test_dir
-    @cloud_formation_test_dir ||= be_dir(File.join(test_dir, 'cloud_formation'))
   end
 end
