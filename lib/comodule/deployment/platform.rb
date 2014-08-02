@@ -294,15 +294,6 @@ class Comodule::Deployment::Platform
   end
 
 
-  def aws_access_credentials
-    config.aws_access_credentials
-  end
-
-  def aws
-    @aws ||= AwsSdk.new(aws_access_credentials)
-  end
-
-
   def env
     @env || (defined?(Rails) ? Rails.env : nil)
   end
