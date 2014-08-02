@@ -65,7 +65,15 @@ secret_config.yml
 
 
   def create_stack(&block)
-    upload
+    if config.upload_secret_files
+      puts 'Upload secret files'
+      upload
+    end
+
+    if config.upload_project
+      puts 'Upload project'
+      upload_project
+    end
 
     cfn = aws.cloud_formation
 
