@@ -53,17 +53,5 @@ module Comodule::Deployment::Helper::SystemUtility
       FileUtils.touch path if !File.directory?(path) && !File.file?(path)
       path
     end
-
-    def command_or_dummy(cmd)
-      if deployment?
-        `#{cmd}`
-      else
-        dummy :`, cmd
-      end
-    end
-
-    def dummy(method_name, *args)
-      puts "execute dummy method: #{method_name}, args: #{args}"
-    end
   end
 end

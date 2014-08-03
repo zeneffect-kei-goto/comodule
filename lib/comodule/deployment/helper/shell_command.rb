@@ -1,5 +1,17 @@
 module Comodule::Deployment::Helper::ShellCommand
 
+  def command_or_dummy(cmd)
+    if deployment?
+      `#{cmd}`
+    else
+      dummy :`, cmd
+    end
+  end
+
+  def dummy(method_name, *args)
+    puts "execute dummy method: #{method_name}, args: #{args}"
+  end
+
   def chown
     return unless config.chown
 
