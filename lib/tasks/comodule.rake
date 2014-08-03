@@ -18,8 +18,11 @@ namespace :comodule do
     @args = args
   end
 
-  desc 'Create required directories and files for the platform'
-  task :create_platform, [:platform_name] => [:environment, :variables] do
-    platform.create_platform
+  namespace :platform do
+
+    desc 'Create necessary directories and files for the platform'
+    task :create, [:platform_name] => [:environment, :variables] do
+      platform.create
+    end
   end
 end

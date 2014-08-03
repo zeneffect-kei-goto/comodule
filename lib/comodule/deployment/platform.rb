@@ -3,7 +3,7 @@ class Comodule::Deployment::Platform
   include ::Comodule::Deployment::Helper
 
   def initialize(name, hsh={})
-    if ['config', 'secret_config'].member?(name)
+    if ['config', 'secret_config', 'cloud_formation'].member?(name)
       raise ArgumentError, %Q|Don't use the platform name [#{name}].|
     end
 
@@ -24,46 +24,38 @@ class Comodule::Deployment::Platform
     self.env = hsh[:env].to_sym if hsh[:env]
   end
 
-  def create_platform
+  def create
     be_dir(
       platform_root,
-      platform_dir,
-      common_cloud_formation_dir,
-      cloud_formation_dir,
       common_config_dir,
       common_secret_config_dir,
+      common_cloud_formation_dir,
+      platform_dir,
       config_dir,
-      secret_config_dir
+      secret_config_dir,
+      cloud_formation_dir
     )
 
     be_file(
-      File.join(common_cloud_formation_dir, '.keep'),
-      File.join(cloud_formation_dir, '.keep'),
       File.join(common_config_dir, '.keep'),
+      File.join(common_cloud_formation_dir, '.keep'),
       File.join(config_dir, '.keep'),
+      File.join(cloud_formation_dir, '.keep'),
       common_config_path,
       common_secret_config_path,
       config_path,
       secret_config_path,
     )
 
-    aws_config_default_path = File.expand_path('../platform/default_files/aws_config.yml', __FILE__)
+    aws_config_default_path = File.expand_path('../platform/default_files/aws_config.yml.erb', __FILE__)
     if !File.directory?(aws_config_path) && !File.file?(aws_config_path)
       render_in_dir(aws_config_default_path, platform_root)
     end
 
     gitignore_path = File.join(platform_root, '.gitignore')
-    unless File.file?(gitignore_path)
-      File.open(gitignore_path, 'w') do |file|
-        file.write <<-HERE
-/**/test
-/**/tmp
-/**/secret_config/*
-/**/secret_config.yml
-/**/stack
-aws_config.yml
-        HERE
-      end
+    gitignore_default_path = File.expand_path('../platform/default_files/.gitignore.erb', __FILE__)
+    if !File.directory?(gitignore_path) && !File.file?(gitignore_path)
+      render_in_dir(gitignore_default_path, platform_root)
     end
 
     nil
