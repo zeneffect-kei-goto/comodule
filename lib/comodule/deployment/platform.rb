@@ -25,17 +25,34 @@ class Comodule::Deployment::Platform
   end
 
   def create_platform
-    be_dir(platform_root, platform_dir, cloud_formation_dir, config_dir, secret_config_dir)
-
-    be_file(
-      File.join(cloud_formation_dir, '.keep'),
-      File.join(config_dir, '.keep'),
-      config_path,
-      "#{secret_config_path}.default"
+    be_dir(
+      platform_root,
+      platform_dir,
+      common_cloud_formation_dir,
+      cloud_formation_dir,
+      common_config_dir,
+      common_secret_config_dir,
+      config_dir,
+      secret_config_dir
     )
 
-    gitignore_path = File.join(platform_root, '.gitignore')
+    be_file(
+      File.join(common_cloud_formation_dir, '.keep'),
+      File.join(cloud_formation_dir, '.keep'),
+      File.join(common_config_dir, '.keep'),
+      File.join(config_dir, '.keep'),
+      common_config_path,
+      common_secret_config_path,
+      config_path,
+      secret_config_path,
+    )
 
+    aws_config_default_path = File.expand_path('../platform/default_files/aws_config.yml', __FILE__)
+    if !File.directory?(aws_config_path) && !File.file?(aws_config_path)
+      render_in_dir(aws_config_default_path, platform_root)
+    end
+
+    gitignore_path = File.join(platform_root, '.gitignore')
     unless File.file?(gitignore_path)
       File.open(gitignore_path, 'w') do |file|
         file.write <<-HERE
@@ -44,8 +61,7 @@ class Comodule::Deployment::Platform
 /**/secret_config/*
 /**/secret_config.yml
 /**/stack
-secret_config/*
-secret_config.yml
+aws_config.yml
         HERE
       end
     end

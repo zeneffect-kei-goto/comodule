@@ -14,6 +14,7 @@ module Comodule::Deployment::Base
 
       @config = ::Comodule::ConfigSupport::Config.new
 
+      @config += yaml_to_config(aws_config_path) if File.file?(aws_config_path)
       @config += yaml_to_config(common_config_path) if File.file?(common_config_path)
       @config += yaml_to_config(config_path)
 
@@ -86,6 +87,10 @@ module Comodule::Deployment::Base
       end
 
       count
+    end
+
+    def aws_config_path
+      @aws_config_path ||= File.join(platform_root, 'aws_config.yml')
     end
 
     def config_dir

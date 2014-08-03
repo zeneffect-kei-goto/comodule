@@ -1,7 +1,14 @@
 require "comodule/version"
-require "rails"
+require 'active_support/all'
 
 module Comodule
+
+  if defined?(Rails)
+    class Railtie < Rails::Railtie
+      rake_tasks { load "tasks/comodule.rake" }
+    end
+  end
+
   autoload :UniArray,       'comodule/uni_array'
   autoload :ConfigSupport,  'comodule/config_support'
   autoload :CustomizeClass, 'comodule/customize_class'
