@@ -34,7 +34,7 @@ module Comodule::Deployment::Helper::ShellCommand
       next unless File.file?(path)
 
       if path =~ /\.erb$/
-        path = render_in_tmp(path, crontab_tmp_dir)
+        path = render_in_dir(path, crontab_tmp_dir)
       end
 
       cmd = "crontab #{path}"
@@ -63,7 +63,7 @@ module Comodule::Deployment::Helper::ShellCommand
       next unless File.file?(file_path)
 
       if file_path =~ /\.erb$/
-        file_path = render_in_tmp(file_path, shell_script_tmp_dir)
+        file_path = render_in_dir(file_path, shell_script_tmp_dir)
       end
 
       command_or_dummy "#{shell_path} #{file_path}"
