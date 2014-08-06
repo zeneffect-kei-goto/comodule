@@ -80,8 +80,8 @@ class Comodule::Deployment::Platform
     @common_cloud_formation_dir ||= be_dir(File.join(platform_root, 'cloud_formation'))
   end
 
-  def cloud_formation_test_dir
-    @cloud_formation_test_dir ||= be_dir(File.join(test_dir, 'cloud_formation'))
+  def test_cloud_formation_dir
+    @test_cloud_formation_dir ||= be_dir(File.join(test_dir, 'cloud_formation'))
   end
 
 
