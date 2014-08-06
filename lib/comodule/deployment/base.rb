@@ -145,20 +145,12 @@ module Comodule::Deployment::Base
       @tmp_project_dir ||= File.join(tmp_projects_dir, project_name)
     end
 
-    def project_dir=(path)
-      @project_dir = path
-    end
-
-    def project_dir
-      @project_dir || project_root
-    end
-
     def project_name
-      File.basename project_dir
+      File.basename project_root
     end
 
     def git_dir
-      @git_dir ||= File.join(project_dir, '.git')
+      @git_dir ||= File.join(project_root, '.git')
     end
 
     def file_path(*path)
