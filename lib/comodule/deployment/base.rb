@@ -28,7 +28,7 @@ module Comodule::Deployment::Base
         end
       end
 
-      @config.platform_name = @platform
+      @config.platform_name = @name
 
       @config
     end
@@ -170,14 +170,12 @@ module Comodule::Deployment::Base
       end
     end
 
-    private
-
     def platform_dir
-      @platform_dir ||= File.join(platform_root, platform)
+      @platform_dir ||= File.join(platform_root, name)
     end
 
-    def platform
-      @platform
+    def name
+      @name
     end
 
     def project_root

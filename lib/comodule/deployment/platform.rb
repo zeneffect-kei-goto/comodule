@@ -7,7 +7,7 @@ class Comodule::Deployment::Platform
       raise ArgumentError, %Q|Don't use the platform name [#{name}].|
     end
 
-    @platform = name
+    @name = name
     @project_root = hsh[:project_root] if hsh[:project_root]
 
     if hsh[:db_host]
