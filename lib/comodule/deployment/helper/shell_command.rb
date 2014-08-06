@@ -27,15 +27,13 @@ module Comodule::Deployment::Helper::ShellCommand
     paths += Dir.glob(File.join(crontab_dir, '**', '*'))
     paths += Dir.glob(File.join(secret_crontab_dir, '**', '*'))
 
-    `rm -rf #{crontab_tmp_dir}`
-    be_dir crontab_tmp_dir
+    `rm -rf #{tmp_crontab_dir}`
+    be_dir tmp_crontab_dir
 
     paths.each do |path|
       next unless File.file?(path)
 
-      if path =~ /\.erb$/
-        path = render_in_dir(path, crontab_tmp_dir)
-      end
+      path = render_in_dir(path, tmp_crontab_dir)
 
       cmd = "crontab #{path}"
       puts "set crontab:\n  #{cmd}"
@@ -57,16 +55,18 @@ module Comodule::Deployment::Helper::ShellCommand
 
     shell_path = config.shell || '/bin/bash'
 
-    `rm -rf #{shell_script_tmp_dir}`
-    be_dir shell_script_tmp_dir
-    paths.each do |file_path|
-      next unless File.file?(file_path)
+    `rm -rf #{tmp_shell_script_dir}`
+    be_dir tmp_shell_script_dir
 
-      if file_path =~ /\.erb$/
-        file_path = render_in_dir(file_path, shell_script_tmp_dir)
-      end
+    paths.each do |path|
+      next unless File.file?(path)
 
-      command_or_dummy "#{shell_path} #{file_path}"
+      path = render_in_dir(path, tmp_shell_script_dir)
+
+      cmd = "#{shell_path} #{path}"
+      puts "execute shell script:\n  #{cmd}"
+
+      command_or_dummy "#{shell_path} #{path}"
 
       count += 1
     end

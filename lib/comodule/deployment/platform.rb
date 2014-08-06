@@ -97,8 +97,8 @@ class Comodule::Deployment::Platform
     @secret_crontab_dir ||= File.join(secret_config_dir, 'crontab')
   end
 
-  def crontab_tmp_dir
-    @crontab_tmp_dir ||= File.join(tmp_dir, 'crontab')
+  def tmp_crontab_dir
+    @tmp_crontab_dir ||= File.join(tmp_dir, 'crontab')
   end
 
 
@@ -114,8 +114,8 @@ class Comodule::Deployment::Platform
     @secret_shell_script_dir ||= File.join(secret_config_dir, 'shell_script')
   end
 
-  def shell_script_tmp_dir
-    @shell_script_tmp_dir ||= File.join(tmp_dir, 'shell_script')
+  def tmp_shell_script_dir
+    @tmp_shell_script_dir ||= File.join(tmp_dir, 'shell_script')
   end
 
 

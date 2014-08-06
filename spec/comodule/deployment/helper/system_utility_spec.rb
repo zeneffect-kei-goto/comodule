@@ -2,8 +2,7 @@ require 'spec_helper'
 
 describe Comodule::Deployment::Helper::SystemUtility do
 
-  include_context 'deployment'
-  include_context 'platform'
+  include_context 'deployment.platform'
 
   let(:sample_yaml) do
     <<-HERE
@@ -40,7 +39,6 @@ db:
   end
 
   describe '#render' do
-
     subject { platform.render(erb_path) }
 
     it 'render erb' do
@@ -49,7 +47,6 @@ db:
   end
 
   describe '#render_in_path' do
-
     let(:path) do
       FileUtils.mkdir_p File.join(platform_root, 'render_in_dir_test')
       File.join(platform_root, 'render_in_dir_test', 'database_config.yml')
@@ -65,7 +62,6 @@ db:
   end
 
   describe '#render_in_dir' do
-
     let(:in_dir) { File.join(platform_root, 'render_in_dir_test') }
 
     before do
@@ -83,7 +79,6 @@ db:
   end
 
   describe '#yaml_to_config' do
-
     let(:path) do
       FileUtils.mkdir_p File.join(platform_root, 'yaml_to_config_test')
       File.join(platform_root, 'yaml_to_config_test', 'database.yml')
@@ -101,7 +96,6 @@ db:
   end
 
   describe '#be_dir' do
-
     let(:dir) { File.join(platform_root, 'be_dir_test') }
 
     subject { platform.be_dir dir }
@@ -113,7 +107,6 @@ db:
   end
 
   describe '#be_file' do
-
     let(:path) do
       FileUtils.mkdir_p File.join(platform_root, 'be_file_test')
       File.join(platform_root, 'be_file_test', 'test_file.txt')
