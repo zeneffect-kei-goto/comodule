@@ -7,7 +7,7 @@ class Comodule::Deployment::Platform
       raise ArgumentError, %Q|Don't use the platform name [#{name}].|
     end
 
-    @platform = name
+    @name = name
     @project_root = hsh[:project_root] if hsh[:project_root]
 
     if hsh[:db_host]
@@ -80,8 +80,8 @@ class Comodule::Deployment::Platform
     @common_cloud_formation_dir ||= be_dir(File.join(platform_root, 'cloud_formation'))
   end
 
-  def cloud_formation_test_dir
-    @cloud_formation_test_dir ||= be_dir(File.join(test_dir, 'cloud_formation'))
+  def test_cloud_formation_dir
+    @test_cloud_formation_dir ||= be_dir(File.join(test_dir, 'cloud_formation'))
   end
 
 
@@ -97,8 +97,8 @@ class Comodule::Deployment::Platform
     @secret_crontab_dir ||= File.join(secret_config_dir, 'crontab')
   end
 
-  def crontab_tmp_dir
-    @crontab_tmp_dir ||= File.join(tmp_dir, 'crontab')
+  def tmp_crontab_dir
+    @tmp_crontab_dir ||= File.join(tmp_dir, 'crontab')
   end
 
 
@@ -114,8 +114,8 @@ class Comodule::Deployment::Platform
     @secret_shell_script_dir ||= File.join(secret_config_dir, 'shell_script')
   end
 
-  def shell_script_tmp_dir
-    @shell_script_tmp_dir ||= File.join(tmp_dir, 'shell_script')
+  def tmp_shell_script_dir
+    @tmp_shell_script_dir ||= File.join(tmp_dir, 'shell_script')
   end
 
 

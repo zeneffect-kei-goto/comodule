@@ -6,7 +6,11 @@ module Comodule::Deployment::Helper::SystemUtility
 
   def render_in_path(from, to)
     File.open(to, 'w') do |file|
-      file.write render(from)
+      if from =~ /\.erb$/
+        file.write render(from)
+      else
+        file.write File.read(from)
+      end
     end
 
     to

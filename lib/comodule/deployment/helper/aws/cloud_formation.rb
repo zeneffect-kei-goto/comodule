@@ -118,7 +118,7 @@ module Comodule::Deployment::Helper::Aws::CloudFormation
     def validate_template(&block)
       template = cloud_formation_template(&block)
 
-      template_path = File.join(owner.cloud_formation_test_dir, 'template.json')
+      template_path = File.join(owner.test_cloud_formation_dir, 'template.json')
 
       File.open(template_path, 'w') do |file|
         file.write template

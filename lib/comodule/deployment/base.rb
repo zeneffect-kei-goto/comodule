@@ -28,7 +28,7 @@ module Comodule::Deployment::Base
         end
       end
 
-      @config.platform_name = @platform
+      @config.platform_name = @name
 
       @config
     end
@@ -133,8 +133,8 @@ module Comodule::Deployment::Base
       @test_dir ||= be_dir(File.join(platform_dir, 'test'))
     end
 
-    def archives_dir
-      @archive_dir ||= be_dir(File.join(tmp_dir, 'archives'))
+    def tmp_archives_dir
+      @tmp_archives_dir ||= be_dir(File.join(tmp_dir, 'archives'))
     end
 
     def tmp_projects_dir
@@ -145,20 +145,12 @@ module Comodule::Deployment::Base
       @tmp_project_dir ||= File.join(tmp_projects_dir, project_name)
     end
 
-    def project_dir=(path)
-      @project_dir = path
-    end
-
-    def project_dir
-      @project_dir || project_root
-    end
-
     def project_name
-      File.basename project_dir
+      File.basename project_root
     end
 
     def git_dir
-      @git_dir ||= File.join(project_dir, '.git')
+      @git_dir ||= File.join(project_root, '.git')
     end
 
     def file_path(*path)
@@ -170,14 +162,12 @@ module Comodule::Deployment::Base
       end
     end
 
-    private
-
     def platform_dir
-      @platform_dir ||= File.join(platform_root, platform)
+      @platform_dir ||= File.join(platform_root, name)
     end
 
-    def platform
-      @platform
+    def name
+      @name
     end
 
     def project_root

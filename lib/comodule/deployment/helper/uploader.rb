@@ -77,7 +77,7 @@ module Comodule::Deployment::Helper::Uploader
   end
 
   def archive_path
-    File.join archives_dir, "#{platform}.tar.gz"
+    File.join tmp_archives_dir, "#{platform}.tar.gz"
   end
 
   def archive_s3_path
