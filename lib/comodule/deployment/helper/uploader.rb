@@ -8,9 +8,9 @@ module Comodule::Deployment::Helper::Uploader
   end
 
   def upload_test
-    original, self.env = env, :test
-    upload
-    self.env = original
+    test_mode do
+      upload
+    end
   end
 
   def upload

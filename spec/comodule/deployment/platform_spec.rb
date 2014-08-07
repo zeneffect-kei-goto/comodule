@@ -4,6 +4,17 @@ describe Comodule::Deployment::Platform do
 
   include_context 'deployment.platform'
 
+  describe '#test_mode' do
+    it 'chenge mode into test on block' do
+      platform.env = :production
+      expect(platform.test?).to eq(false)
+      platform.test_mode do
+        expect(platform.test?).to eq(true)
+      end
+      expect(platform.test?).to eq(false)
+    end
+  end
+
   describe '#create' do
 
     def directory_check(dir)

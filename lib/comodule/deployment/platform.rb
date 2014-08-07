@@ -146,6 +146,12 @@ class Comodule::Deployment::Platform
     @env = name.to_sym
   end
 
+  def test_mode
+    original, self.env = env, :test
+    yield
+    self.env = original
+  end
+
   def production?
     env && !env.empty? && env == :production
   end
