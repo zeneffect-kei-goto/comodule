@@ -175,7 +175,7 @@ module Comodule::Deployment::Base
         if defined?(Rails)
           Rails.root
         else
-          File.expand_path('../../../../', __FILE__)
+          Dir.getwd
         end
     end
 
