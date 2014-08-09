@@ -112,10 +112,10 @@ module Comodule::Deployment::Helper::Uploader
       return
     end
 
-    `rm -rf #{tmp_project_dir}`
+    rm_rf tmp_project_dir
 
     `git clone #{git_dir} #{tmp_project_dir}`
-    `rm -rf #{File.join(tmp_project_dir, '.git')}` if config.upload_project == 'without_git'
+    rm_rf File.join(tmp_project_dir, '.git') if config.upload_project == 'without_git'
 
     File.open(File.join(tmp_project_dir, 'project_stamp.txt'), 'w') do |file|
       file.write project_stamp

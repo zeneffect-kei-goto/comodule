@@ -30,6 +30,17 @@ module Comodule::Deployment::Helper::SystemUtility
     )
   end
 
+  def rm_rf(dir)
+    unless dir.to_s =~ %r|^#{platform_root}|
+      raise ArgumentError, "#{self.class.name}##{__method__} cannot remove outside of #platform_root"
+    end
+
+    return unless File.directory?(dir)
+
+    `rm -rf #{dir}`
+    dir
+  end
+
   def be_dir(*dir)
     if dir.size > 1
       return dir.map { |d| be_dir(d) }

@@ -36,7 +36,7 @@ module Comodule::Deployment::Base
     def config_copy
       return unless config.cp
 
-      `rm -rf #{test_dir}/file_copy` if test?
+      rm_rf File.join(test_dir, file_copy) if test?
 
       count = 0
 
