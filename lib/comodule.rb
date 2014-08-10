@@ -32,7 +32,7 @@ module Comodule
 
       module Aws
         autoload :Base,           'comodule/deployment/helper/aws/base'
-        autoload :Sdk,            'comodule/deployment/helper/aws/sdk'
+        autoload :S3,             'comodule/deployment/helper/aws/s3'
         autoload :CloudFormation, 'comodule/deployment/helper/aws/cloud_formation'
       end
     end
