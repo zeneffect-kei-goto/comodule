@@ -21,7 +21,7 @@ module Comodule::Deployment::Helper::Uploader
       `rm -rf #{test_upload_dir}`
       be_dir test_upload_dir
     else
-      s3_bucket.objects.with_prefix("#{platform}/").delete_all
+      s3.bucket.objects.with_prefix("#{name}/").delete_all
     end
 
     secret_files.each do |path|
@@ -34,7 +34,7 @@ module Comodule::Deployment::Helper::Uploader
         be_dir dir
         FileUtils.cp path, dir
       else
-        obj = s3_bucket.objects[s3_path]
+        obj = s3.bucket.objects[s3_path]
         obj.write Pathname.new(path), server_side_encryption: :aes256
       end
     end
@@ -49,7 +49,7 @@ module Comodule::Deployment::Helper::Uploader
       be_dir test_download_dir
     end
 
-    s3_bucket.objects.with_prefix("#{platform}/").each do |s3_obj|
+    s3.bucket.objects.with_prefix("#{platform}/").each do |s3_obj|
       local_path =
         unless test?
           s3_obj.key.sub(%r|^#{platform}/platform|, platform_root)
@@ -129,7 +129,7 @@ module Comodule::Deployment::Helper::Uploader
 
   def upload_archive(path = archive_path)
     s3_path = archive_s3_path
-    obj = s3_bucket.objects[s3_path]
+    obj = s3.bucket.objects[s3_path]
     obj.write(
       Pathname.new(path),
       server_side_encryption: :aes256

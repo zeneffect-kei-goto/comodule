@@ -115,24 +115,7 @@ class Comodule::Deployment::Platform
   end
 
   def tmp_shell_script_dir
-    @tmp_shell_script_dir ||= File.join(tmp_dir, 'shell_script')
-  end
-
-
-  def s3_bucket_name=(name)
-    @s3_bucket_name = name
-  end
-
-  def s3_bucket_name
-    @s3_bucket_name ||= config.s3_bucket
-  end
-
-  def s3_bucket
-    return @s3_bucket if @s3_bucket
-    s3 = aws.s3
-    bucket_name = s3_bucket_name
-    s3.buckets.create(bucket_name) unless s3.buckets[bucket_name].exists?
-    @s3_bucket = s3.buckets[bucket_name]
+    @tmp_shell_script_dir ||= be_dir(File.join(tmp_dir, 'shell_script'))
   end
 
 
