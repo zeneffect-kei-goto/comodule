@@ -98,7 +98,7 @@ class Comodule::Deployment::Platform
   end
 
   def tmp_crontab_dir
-    @tmp_crontab_dir ||= File.join(tmp_dir, 'crontab')
+    @tmp_crontab_dir ||= be_dir(File.join(tmp_dir, 'crontab'))
   end
 
 

@@ -142,7 +142,7 @@ module Comodule::Deployment::Base
     end
 
     def tmp_project_dir
-      @tmp_project_dir ||= File.join(tmp_projects_dir, project_name)
+      @tmp_project_dir ||= be_dir(File.join(tmp_projects_dir, project_name))
     end
 
     def project_name

@@ -15,4 +15,18 @@ shared_context 'deployment.platform' do
   after do
     `rm -rf #{project_root}`
   end
+
+  def be_dir(dir_getter)
+    FileUtils.mkdir_p platform.send(dir_getter)
+  end
+
+  def be_files(dir_getter, names, contents = "")
+    names.each do |name|
+      path = File.join(platform.send(dir_getter), name)
+      FileUtils.mkdir_p File.dirname(path)
+      File.open(path, 'w') do |file|
+        file.write contents
+      end
+    end
+  end
 end
