@@ -13,6 +13,8 @@ module Comodule::Deployment::Helper::Aws
   end
 
   class Service
+    include ::Comodule::Deployment::Helper::Base
+
     def initialize(platform)
       self.owner = platform
 
