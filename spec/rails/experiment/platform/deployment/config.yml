@@ -1,0 +1,9 @@
+rails_env: production
+
+upload_secret_files: true
+upload_project: without_git
+
+ec2:
+  ami:
+    prefix: experiment-ami
+  instance_type: m3.medium

@@ -55,6 +55,11 @@ namespace :comodule do
       platform.cloud_formation.delete_stack
     end
 
+    desc 'Provisioning'
+    task :provision, [:platform_name] => :variables do
+      platform.deploy
+    end
+
     namespace :test do
 
       desc 'Test of upload secret files'

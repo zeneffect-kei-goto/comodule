@@ -20,12 +20,12 @@ module Comodule::Deployment::Helper::Aws::CloudFormation
     def create_stack(&block)
       if config.upload_secret_files
         puts 'Upload secret files'
-        upload
+        owner.upload_secret_files
       end
 
       if config.upload_project
         puts 'Upload project'
-        upload_project
+        owner.upload_project
       end
 
       stack_name = []

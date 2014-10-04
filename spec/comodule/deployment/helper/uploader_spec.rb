@@ -215,7 +215,7 @@ describe Comodule::Deployment::Helper::Uploader do
     context 'not exists #git_dir' do
       it 'do nothing' do
         expect(platform).to receive(:puts).with('.git not found')
-        is_expected.to eq(nil)
+        expect { subject }.to raise_error(RuntimeError)
       end
     end
 

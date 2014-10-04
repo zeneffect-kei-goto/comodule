@@ -124,7 +124,7 @@ module Comodule::Deployment::Helper::Uploader
   def archive_project
     unless File.directory?(git_dir)
       puts ".git not found"
-      return
+      raise
     end
 
     rm_rf tmp_project_dir

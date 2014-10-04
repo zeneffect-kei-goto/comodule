@@ -1,0 +1,100 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template has a database, a auto scaling group and a ELB.",
+  "Resources": {
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": ["<%= config.ec2.iam_role %>"]
+      }
+    },
+    "System": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "<%= ec2.latest_ami.id %>",
+        "InstanceType": "<%= config.ec2.instance_type %>",
+        "KeyName": "<%= config.ec2.key_name %>",
+        "IamInstanceProfile": { "Ref": "InstanceProfile" },
+        "SecurityGroupIds": [ "<%= config.ec2.security_group %>" ],
+        "Tags": [{"Key": "Name", "Value": "<%= [config.ec2.name, config.platform_name].join(?-) %>"}],
+        "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+          "#!/bin/bash -v\n",
+
+          "if [ ! -d <%= config.project_root %> ]; then\n",
+          "  mkdir -p <%= config.project_root %>\n",
+          "fi\n",
+
+          "cd <%= config.project_root %>\n",
+          "touch ./setup.log\n",
+
+          "# Install packages\n",
+          "(/opt/aws/bin/cfn-init -s ", { "Ref": "AWS::StackId" }, " -r System ",
+          "  --region ", { "Ref": "AWS::Region" }, " || error_exit 'Failed to run cfn-init') >> setup.log 2>&1\n",
+
+          "mkdir <%= config.application %> >> setup.log 2>&1\n",
+          "cd <%= config.application %> >> setup.log 2>&1\n",
+          "tar xfz ../<%= "#{config.platform_name}.tar.gz" %> >> ../setup.log 2>&1\n",
+
+          "chown -R ec2-user:ec2-user ../<%= config.application %> >> ../setup.log 2>&1\n",
+
+          "export PATH=/home/ec2-user/.rbenv/shims:/home/ec2-user/.rbenv/bin:/usr/local/bin:$PATH >> ../setup.log 2>&1\n",
+          "eval \"$(rbenv init -)\" >> ../setup.log 2>&1\n",
+
+          <% secret_key_base = SecureRandom.hex(64) %>
+
+          "boot_script_path=bin/boot\n",
+          "touch $boot_script_path\n",
+          "echo '#!/bin/bash -v' >> $boot_script_path\n",
+          "echo 'SECRET_KEY_BASE=\"<%= secret_key_base %>\" bundle exec unicorn_rails -D -E <%= config.rails_env %> -c config/<%= config.unicorn_rb %>' >> $boot_script_path\n",
+          "chmod +x $boot_script_path >> ../setup.log 2>&1\n",
+
+          "bundle >> ../setup.log 2>&1\n",
+          "rbenv rehash >> ../setup.log 2>&1\n",
+
+          "bundle exec rake deployment:provision[<%= config.platform_name %>] RAILS_ENV=<%= config.rails_env %> >> ../setup.log 2>&1\n",
+
+          "/sbin/chkconfig --level 12345 nginx on >> ../setup.log 2>&1\n",
+          "service nginx start >> ../setup.log 2>&1\n",
+          "service nginx reload >> ../setup.log 2>&1\n",
+
+          "echo 'cd <%= config.rails_root %>' >> /etc/rc.local\n",
+          "echo \"/bin/bash $boot_script_path\" >> /etc/rc.local\n",
+
+          "SECRET_KEY_BASE='<%= secret_key_base %>' bundle exec rake db:migrate RAILS_ENV=<%= config.rails_env %> >> ../setup.log 2>&1\n",
+          "SECRET_KEY_BASE='<%= secret_key_base %>' bundle exec rake assets:precompile RAILS_ENV=<%= config.rails_env %> >> ../setup.log 2>&1\n",
+
+          "export PATH=$PATH:/opt/aws/bin\n",
+
+          "echo $PATH >> ../setup.log 2>&1\n",
+          "ruby -v >> ../setup.log 2>&1\n",
+          "rails -v >> ../setup.log 2>&1\n",
+          "which rbenv >> ../setup.log 2>&1\n",
+
+          "/bin/bash $boot_script_path >> ../setup.log 2>&1\n"
+        ]]}}
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "<%= config.project_root %>/<%= "#{config.platform_name}.tar.gz" %>": { "source": "<%= archive_s3_public_url %>" }
+            }
+          }
+        },
+        "AWS::CloudFormation::Authentication": {
+          "AWSCredential": {
+            "type": "s3",
+            "buckets": ["<%= config.s3_bucket %>"],
+            "roleName": "<%= config.ec2.iam_role %>"
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "URL": {
+      "Description": "EC2 public URL",
+      "Value": { "Fn::Join": [ "", [ "https://", { "Fn::GetAtt": [ "System", "PublicDnsName" ]}]]}
+    }
+  }
+}

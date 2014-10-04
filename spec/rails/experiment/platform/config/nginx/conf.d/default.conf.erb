@@ -1,0 +1,16 @@
+#
+# The default server
+#
+server {
+    listen          80;
+    server_name     <%= config.uri %>;
+
+    # For health check by ELB
+    location = /webservers_health {
+        return 444;
+    }
+
+    location / {
+        rewrite ^/(.*) https://<%= config.uri %>/$1 permanent;
+    }
+}
