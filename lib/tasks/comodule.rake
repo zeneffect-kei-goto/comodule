@@ -24,5 +24,33 @@ namespace :comodule do
     task :create, [:platform_name] => [:environment, :variables] do
       platform.create
     end
+
+    desc 'Upload secret files'
+    task :upload_secret_files, [:platform_name] => [:environment, :variables] do
+      platform.upload_secret_files
+    end
+
+    desc "Download secret files"
+    task :download_secret_files, [:platform_name] => [:environment, :variables] do
+      platform.download_secret_files
+    end
+
+    desc "Upload project files"
+    task :upload_project, [:platform_name] => [:environment, :variables] do
+      platform.upload_project
+    end
+
+    namespace :test do
+
+      desc 'Test of upload secret files'
+      task :upload_secret_files, [:platform_name] => [:environment, :variables] do
+        platform.upload_secret_files_test
+      end
+
+      desc "Test of download secret files"
+      task :download_secret_files, [:platform_name] => [:environment, :variables] do
+        platform.download_secret_files_test
+      end
+    end
   end
 end

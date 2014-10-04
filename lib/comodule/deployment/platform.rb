@@ -131,6 +131,13 @@ class Comodule::Deployment::Platform
 
   def test_mode
     original, self.env = env, :test
+    result = yield
+    self.env = original
+    result
+  end
+
+  def deployment_mode
+    original, self.env = env, :deployment
     yield
     self.env = original
   end

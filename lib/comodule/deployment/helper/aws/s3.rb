@@ -33,12 +33,20 @@ module Comodule::Deployment::Helper::Aws::S3
         end
     end
 
-    def path(local_path)
+    def local_to_cloud(local_path)
       local_path.sub(%r|#{owner.project_root}/|, "#{owner.name}/")
     end
 
-    def path_in_local(s3_path)
+    def cloud_to_local(s3_path)
       s3_path.sub(%r|#{owner.name}/|, "#{owner.project_root}/")
+    end
+
+    def public_url(s3_path)
+      s3.bucket[s3_path].public_url secure: true
+    end
+
+    def local_to_public_url(local_path)
+      public_url local_to_cloud(local_path)
     end
   end
 end

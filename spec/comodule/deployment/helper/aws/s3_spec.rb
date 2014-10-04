@@ -62,20 +62,20 @@ describe Comodule::Deployment::Helper::Aws::S3 do
     end
   end
 
-  describe '#path' do
-    subject { platform.s3.path(File.join(platform.secret_config_dir, 'secret.txt')) }
+  describe '#local_to_cloud' do
+    subject { platform.s3.local_to_cloud(File.join(platform.secret_config_dir, 'secret.txt')) }
 
     it "return a path on S3" do
       is_expected.to eq("#{platform.name}/platform/#{platform.name}/secret_config/secret.txt")
     end
   end
 
-  describe '#path_in_local' do
+  describe '#cloud_to_local' do
     let(:path) { File.join platform.secret_config_dir, 'secret.txt' }
 
     subject do
-      s3_path = platform.s3.path(path)
-      platform.s3.path_in_local(s3_path)
+      s3_path = platform.s3.local_to_cloud(path)
+      platform.s3.cloud_to_local(s3_path)
     end
 
     it 'return a path in local' do

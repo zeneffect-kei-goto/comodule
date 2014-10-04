@@ -133,10 +133,6 @@ module Comodule::Deployment::Base
       @test_dir ||= be_dir(File.join(platform_dir, 'test'))
     end
 
-    def tmp_archives_dir
-      @tmp_archives_dir ||= be_dir(File.join(tmp_dir, 'archives'))
-    end
-
     def tmp_projects_dir
       @tmp_projects_dir ||= be_dir(File.join(tmp_dir, 'projects'))
     end

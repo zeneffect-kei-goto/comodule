@@ -180,14 +180,6 @@ describe Comodule::Deployment::Platform do
     end
   end
 
-  describe '#tmp_archives_dir' do
-    subject { platform.tmp_archives_dir }
-
-    it 'equals #tmp_dir/archives' do
-      is_expected.to eq(File.join(platform.tmp_dir, 'archives'))
-    end
-  end
-
   describe '#project_name' do
     subject { platform.project_name }
 
