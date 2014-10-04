@@ -60,6 +60,24 @@ namespace :comodule do
       platform.deploy
     end
 
+    namespace :ssl do
+
+      desc "Describe IAM server certificates"
+      task :describe, [:platform_name] => :variables do
+        platform.ssl.describe
+      end
+
+      desc "Upload IAM server certificate"
+      task :upload, [:platform_name] => :variables do
+        platform.ssl.upload
+      end
+
+      desc "Delete IAM server certificate"
+      task :delete, [:platform_name] => :variables do
+        platform.ssl.delete
+      end
+    end
+
     namespace :test do
 
       desc 'Test of upload secret files'

@@ -3,7 +3,7 @@ require 'aws-sdk'
 module Comodule::Deployment::Helper::Aws
 
   def self.included(receiver)
-    receiver.send :include, InstanceMethods, CloudFormation, S3, Ec2
+    receiver.send :include, InstanceMethods, CloudFormation, S3, Ec2, Ssl, Rds
   end
 
   module InstanceMethods

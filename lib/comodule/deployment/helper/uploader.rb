@@ -101,7 +101,7 @@ module Comodule::Deployment::Helper::Uploader
   end
 
   def archive_s3_public_url
-    s3_bucket.objects[archive_s3_path].public_url secure: true
+    s3.bucket.objects[archive_s3_path].public_url secure: true
   end
 
   def download_project
