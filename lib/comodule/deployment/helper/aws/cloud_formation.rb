@@ -30,7 +30,7 @@ module Comodule::Deployment::Helper::Aws::CloudFormation
 
       stack_name = []
       stack_name << config.stack_name_prefix if config.stack_name_prefix
-      stack_name << owner.platform
+      stack_name << owner.name
       stack_name << Time.now.strftime("%Y%m%d")
       stack_name = stack_name.join(?-)
 

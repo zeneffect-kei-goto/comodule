@@ -40,6 +40,21 @@ namespace :comodule do
       platform.upload_project
     end
 
+    desc 'Validate cloudFormation stack'
+    task :validate_template, [:platform_name] => :variables do
+      platform.cloud_formation.validate_template
+    end
+
+    desc 'Create cloudFormation stack'
+    task :create_stack, [:platform_name] => :variables do
+      platform.cloud_formation.create_stack
+    end
+
+    desc 'Delete cloudFormation stack'
+    task :delete_stack, [:platform_name] => :variables do
+      platform.cloud_formation.delete_stack
+    end
+
     namespace :test do
 
       desc 'Test of upload secret files'

@@ -1,0 +1,9 @@
+application: &application experiment
+
+upload_secret_files: false
+upload_project: false
+
+unicorn_rb: experiment_unicorn.rb
+
+ec2:
+  name: *application
