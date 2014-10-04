@@ -1,0 +1,21 @@
+h1 Listing experiences
+
+table
+  thead
+    tr
+      th Impression
+      th
+      th
+      th
+
+  tbody
+    - @experiences.each do |experience|
+      tr
+        td = experience.impression
+        td = link_to 'Show', experience
+        td = link_to 'Edit', edit_experience_path(experience)
+        td = link_to 'Destroy', experience, data: {:confirm => 'Are you sure?'}, :method => :delete
+
+br
+
+= link_to 'New Experience', new_experience_path
