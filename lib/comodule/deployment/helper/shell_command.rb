@@ -27,7 +27,7 @@ module Comodule::Deployment::Helper::ShellCommand
     paths += Dir.glob(File.join(crontab_dir, '**', '*'))
     paths += Dir.glob(File.join(secret_crontab_dir, '**', '*'))
 
-    `rm -rf #{tmp_crontab_dir}`
+    rm_rf tmp_crontab_dir
     be_dir tmp_crontab_dir
 
     paths.each do |path|
@@ -55,7 +55,7 @@ module Comodule::Deployment::Helper::ShellCommand
 
     shell_path = config.shell || '/bin/bash'
 
-    `rm -rf #{tmp_shell_script_dir}`
+    rm_rf tmp_shell_script_dir
     be_dir tmp_shell_script_dir
 
     paths.each do |path|

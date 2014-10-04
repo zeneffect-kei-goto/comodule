@@ -24,16 +24,6 @@ shared_context 'deployment.helper.shell_command' do
     end
   end
 
-  def be_files(dir_getter, names, contents)
-    names.each do |name|
-      path = File.join(platform.send(dir_getter), name)
-      FileUtils.mkdir_p File.dirname(path)
-      File.open(path, 'w') do |file|
-        file.write contents
-      end
-    end
-  end
-
   def be_crontab_files(dir_getter, names)
     be_files dir_getter, names, "1 0 1 * * /bin/bash ls -la\n"
   end

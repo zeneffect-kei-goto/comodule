@@ -36,7 +36,7 @@ module Comodule::Deployment::Base
     def config_copy
       return unless config.cp
 
-      `rm -rf #{test_dir}/file_copy` if test?
+      rm_rf File.join(test_dir, file_copy) if test?
 
       count = 0
 
@@ -133,16 +133,12 @@ module Comodule::Deployment::Base
       @test_dir ||= be_dir(File.join(platform_dir, 'test'))
     end
 
-    def tmp_archives_dir
-      @tmp_archives_dir ||= be_dir(File.join(tmp_dir, 'archives'))
-    end
-
     def tmp_projects_dir
       @tmp_projects_dir ||= be_dir(File.join(tmp_dir, 'projects'))
     end
 
     def tmp_project_dir
-      @tmp_project_dir ||= File.join(tmp_projects_dir, project_name)
+      @tmp_project_dir ||= be_dir(File.join(tmp_projects_dir, project_name))
     end
 
     def project_name
@@ -175,7 +171,7 @@ module Comodule::Deployment::Base
         if defined?(Rails)
           Rails.root
         else
-          File.expand_path('../../../../', __FILE__)
+          Dir.getwd
         end
     end
 

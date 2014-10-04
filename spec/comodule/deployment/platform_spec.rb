@@ -4,6 +4,17 @@ describe Comodule::Deployment::Platform do
 
   include_context 'deployment.platform'
 
+  describe '#test_mode' do
+    it 'chenge mode into test on block' do
+      platform.env = :production
+      expect(platform.test?).to eq(false)
+      platform.test_mode do
+        expect(platform.test?).to eq(true)
+      end
+      expect(platform.test?).to eq(false)
+    end
+  end
+
   describe '#create' do
 
     def directory_check(dir)
@@ -166,14 +177,6 @@ describe Comodule::Deployment::Platform do
 
     it 'equals #platform_dir/tmp' do
       is_expected.to eq(File.join(platform.platform_dir, 'test'))
-    end
-  end
-
-  describe '#tmp_archives_dir' do
-    subject { platform.tmp_archives_dir }
-
-    it 'equals #tmp_dir/archives' do
-      is_expected.to eq(File.join(platform.tmp_dir, 'archives'))
     end
   end
 
