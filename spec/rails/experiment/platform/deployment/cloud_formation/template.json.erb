@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "This template has a database, a auto scaling group and a ELB.",
+  "Description": "This is a EC2 instance for test of Comodule.",
   "Resources": {
     "InstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
@@ -33,7 +33,14 @@
 
           "mkdir <%= config.application %> >> setup.log 2>&1\n",
           "cd <%= config.application %> >> setup.log 2>&1\n",
-          "tar xfz ../<%= "#{config.platform_name}.tar.gz" %> >> ../setup.log 2>&1\n",
+          "tar xfz ../<%= archive_filename %> >> ../setup.log 2>&1\n",
+
+          "secret_config_path=platform/secret_config.yml\n",
+          "touch $secret_config_path\n",
+          "echo 'aws_region: <%= config.aws_region %>' >> $secret_config_path\n",
+          "echo 's3_bucket: <%= config.s3_bucket %>' >> $secret_config_path\n",
+          "echo 'project_root: <%= config.project_root %>' >> $secret_config_path\n",
+          "echo 'rails_root: <%= config.rails_root %>' >> $secret_config_path\n",
 
           "chown -R ec2-user:ec2-user ../<%= config.application %> >> ../setup.log 2>&1\n",
 
@@ -51,7 +58,7 @@
           "bundle >> ../setup.log 2>&1\n",
           "rbenv rehash >> ../setup.log 2>&1\n",
 
-          "bundle exec rake deployment:provision[<%= config.platform_name %>] RAILS_ENV=<%= config.rails_env %> >> ../setup.log 2>&1\n",
+          "bundle exec rake comodule:platform:provision[<%= config.platform_name %>] RAILS_ENV=<%= config.rails_env %> >> ../setup.log 2>&1\n",
 
           "/sbin/chkconfig --level 12345 nginx on >> ../setup.log 2>&1\n",
           "service nginx start >> ../setup.log 2>&1\n",
@@ -77,7 +84,7 @@
         "AWS::CloudFormation::Init": {
           "config": {
             "files": {
-              "<%= config.project_root %>/<%= "#{config.platform_name}.tar.gz" %>": { "source": "<%= archive_s3_public_url %>" }
+              "<%= config.project_root %>/<%= archive_filename %>": { "source": "<%= archive_s3_public_url %>" }
             }
           }
         },

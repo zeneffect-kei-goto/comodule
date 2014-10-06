@@ -1,9 +1,16 @@
+uri: !str example.com
 rails_env: production
 
 upload_secret_files: true
 upload_project: without_git
 
+cp:
+  nginx: !str /etc/nginx
+
 ec2:
   ami:
     prefix: experiment-ami
   instance_type: m3.medium
+
+db:
+  master: your-db-idetifier
