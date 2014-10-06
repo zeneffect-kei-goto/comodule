@@ -40,4 +40,4 @@ gem 'unicorn'
 
 gem 'slim-rails'
 
-gem 'comodule', path: File.expand_path('../../../../../comodule', __FILE__)
+gem 'comodule', path: File.expand_path('../vendor/gems/comodule', __FILE__)
