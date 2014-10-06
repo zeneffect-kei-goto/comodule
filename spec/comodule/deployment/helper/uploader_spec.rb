@@ -191,17 +191,27 @@ describe Comodule::Deployment::Helper::Uploader do
     end
   end
 
+  describe '#archive_filename' do
+    subject { platform.archive_filename }
+
+    it do
+      "#{platform.project_name}-#{platform.config.platform_name}.tar.gz"
+    end
+  end
+
   describe '#archive_path' do
     subject { platform.archive_path }
+
     it do
       is_expected.to eq(
-        File.join(platform.tmp_archives_dir, "#{platform.name}.tar.gz")
+        File.join(platform.tmp_archives_dir, platform.archive_filename)
       )
     end
   end
 
   describe '#archive_s3_path' do
     subject { platform.archive_s3_path }
+
     it do
       is_expected.to eq(
         platform.archive_path.sub(%r|^#{platform.tmp_dir}/|, '')

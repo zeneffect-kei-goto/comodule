@@ -166,6 +166,10 @@ module Comodule::Deployment::Base
       @name
     end
 
+    def project_name
+      @project_name ||= File.basename(project_root)
+    end
+
     def project_root
       @project_root ||=
         if defined?(Rails)

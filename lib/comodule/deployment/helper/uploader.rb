@@ -92,8 +92,12 @@ module Comodule::Deployment::Helper::Uploader
     @tmp_archives_dir ||= be_dir(File.join(tmp_dir, 'archives'))
   end
 
+  def archive_filename
+    "#{project_name}-#{config.platform_name}.tar.gz"
+  end
+
   def archive_path
-    File.join tmp_archives_dir, "#{name}.tar.gz"
+    File.join tmp_archives_dir, archive_filename
   end
 
   def archive_s3_path
