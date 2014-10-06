@@ -37,10 +37,8 @@ module Comodule::Deployment::Helper::Uploader
       be_dir dir
       FileUtils.cp path, dir
 
-      if deployment?
-        obj = s3.bucket.objects[s3_path]
-        obj.write Pathname.new(path), server_side_encryption: :aes256
-      end
+      obj = s3.bucket.objects[s3_path]
+      obj.write Pathname.new(path), server_side_encryption: :aes256
     end
   end
 
@@ -92,8 +90,12 @@ module Comodule::Deployment::Helper::Uploader
     @tmp_archives_dir ||= be_dir(File.join(tmp_dir, 'archives'))
   end
 
+  def archive_filename
+    "#{project_name}-#{config.platform_name}.tar.gz"
+  end
+
   def archive_path
-    File.join tmp_archives_dir, "#{name}.tar.gz"
+    File.join tmp_archives_dir, archive_filename
   end
 
   def archive_s3_path
@@ -101,7 +103,7 @@ module Comodule::Deployment::Helper::Uploader
   end
 
   def archive_s3_public_url
-    s3_bucket.objects[archive_s3_path].public_url secure: true
+    s3.bucket.objects[archive_s3_path].public_url secure: true
   end
 
   def download_project
@@ -124,7 +126,7 @@ module Comodule::Deployment::Helper::Uploader
   def archive_project
     unless File.directory?(git_dir)
       puts ".git not found"
-      return
+      raise
     end
 
     rm_rf tmp_project_dir

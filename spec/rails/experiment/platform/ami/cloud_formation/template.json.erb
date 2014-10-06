@@ -1,0 +1,138 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "It creates a AMI to start <%= config.application %>.",
+
+  "Resources": {
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": ["<%= config.ec2.iam_role %>"]
+      }
+    },
+
+    "System": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": "<%= config.ec2.instance_type %>",
+        "ImageId": "<%= config.ec2.ami %>",
+        "KeyName": "<%= config.ec2.key_name %>",
+        "SecurityGroups": [ "<%= config.ec2.security_group %>" ],
+        "IamInstanceProfile": { "Ref": "InstanceProfile" },
+        "Tags": [{"Key": "Name", "Value": "<%= [config.ec2.name, config.platform_name].join(?-) %>"}],
+        "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+          "#!/bin/bash -v\n",
+          "yum update -y\n",
+
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref": "CfnWaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "# Install packages\n",
+          "/opt/aws/bin/cfn-init -s ", { "Ref": "AWS::StackId" }, " -r System ",
+          "  --region ", { "Ref": "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+
+          "# Install rbenv\n",
+          "export RBENV_ROOT=/home/ec2-user/.rbenv\n",
+          "git clone https://github.com/sstephenson/rbenv.git $RBENV_ROOT\n",
+          "git clone https://github.com/sstephenson/ruby-build.git $RBENV_ROOT/plugins/ruby-build\n",
+          "$RBENV_ROOT/plugins/ruby-build/install.sh\n",
+
+          "export_path='export PATH=/home/ec2-user/.rbenv/shims:/home/ec2-user/.rbenv/bin:/usr/local/bin:$PATH'\n",
+          "eval_rbenv_init='eval \"$(rbenv init -)\"'\n",
+
+          "echo $export_path >> /home/ec2-user/.bashrc\n",
+          "echo $eval_rbenv_init >> /home/ec2-user/.bashrc\n",
+
+          "echo $export_path >> /root/.bashrc\n",
+          "echo $eval_rbenv_init >> /root/.bashrc\n",
+
+          "echo $export_path >> /etc/rc.local\n",
+          "echo $eval_rbenv_init >> /etc/rc.local\n",
+
+          "eval $export_path\n",
+          "eval $eval_rbenv_init\n",
+
+          "echo 'gem: --no-ri --no-rdoc' >> /home/ec2-user/.gemrc\n",
+          "chown ec2-user:ec2-user /home/ec2-user/.gemrc\n",
+          "echo 'gem: --no-ri --no-rdoc' >> /root/.gemrc\n",
+          "echo 'gem: --no-ri --no-rdoc' >> /.gemrc\n",
+
+          "install_log_path=/home/ec2-user/install.log\n",
+          "touch $install_log_path\n",
+          "chown ec2-user:ec2-user $install_log_path\n",
+
+
+          "# Install ruby <%= config.ruby_version %>\n",
+          "rbenv install <%= config.ruby_version %> >> $install_log_path 2>&1\n",
+          "rbenv rehash >> $install_log_path 2>&1\n",
+          "rbenv global <%= config.ruby_version %> >> $install_log_path 2>&1\n",
+
+          "# Install bundler\n",
+          "gem update --system >> $install_log_path 2>&1\n",
+          "gem install bundler >> $install_log_path 2>&1\n",
+          "rbenv rehash >> $install_log_path 2>&1\n",
+
+          "# Install aws-sdk\n",
+          "yum -y install libxml2-devel libxslt-devel >> $install_log_path 2>&1\n",
+          "gem install nokogiri -- --use-system-libraries >> $install_log_path 2>&1\n",
+          "gem install aws-sdk >> $install_log_path 2>&1\n",
+          "rbenv rehash >> $install_log_path 2>&1\n",
+          "export PATH=$PATH:/opt/aws/bin\n",
+          "echo 'export PATH=$PATH:/opt/aws/bin' >> /etc/rc.local\n",
+
+          "# Install ImageMagick\n",
+          "yum -y install ImageMagick ImageMagick-devel >> $install_log_path 2>&1\n",
+
+          "chown -R ec2-user:ec2-user $RBENV_ROOT\n",
+
+          "echo 'RC user has this path.' >> $install_log_path\n",
+          "echo $PATH >> $install_log_path\n",
+
+          "# All is well so signal success\n",
+          "/opt/aws/bin/cfn-signal -e $? -r \"System setup complete\" '", { "Ref" : "CfnWaitHandle" }, "'\n"
+        ]]}}
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "packages": {
+              "yum": {
+                "nginx": [],
+                "git": [],
+                "gcc": [],
+                "gcc-c++": [],
+                "openssl": [],
+                "openssl-devel": [],
+                "readline-devel": [],
+                "sqlite-devel": [],
+                "mysql": [],
+                "mysql-devel": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "CfnWaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "CfnWaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "System",
+      "Properties": {
+        "Handle": { "Ref": "CfnWaitHandle" },
+        "Timeout": "7200"
+      }
+    }
+  },
+
+  "Outputs": {
+    "SystemUri": {
+      "Value": { "Fn::GetAtt": ["System", "PublicDnsName"]}
+    }
+  }
+}

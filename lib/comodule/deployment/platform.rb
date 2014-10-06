@@ -63,7 +63,7 @@ class Comodule::Deployment::Platform
 
 
   def deploy
-    download
+    download_secret_files
     @config = nil
     config_copy
     chown

@@ -1,0 +1,9 @@
+p#notice = notice
+
+p
+  strong Impression:
+  = @experience.impression
+
+= link_to 'Edit', edit_experience_path(@experience)
+'|
+= link_to 'Back', experiences_path

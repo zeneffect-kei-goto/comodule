@@ -34,6 +34,9 @@ module Comodule
         autoload :Base,           'comodule/deployment/helper/aws/base'
         autoload :S3,             'comodule/deployment/helper/aws/s3'
         autoload :CloudFormation, 'comodule/deployment/helper/aws/cloud_formation'
+        autoload :Ec2,            'comodule/deployment/helper/aws/ec2'
+        autoload :Ssl,            'comodule/deployment/helper/aws/ssl'
+        autoload :Rds,            'comodule/deployment/helper/aws/rds'
       end
     end
   end

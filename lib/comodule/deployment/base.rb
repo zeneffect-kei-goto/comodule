@@ -36,7 +36,7 @@ module Comodule::Deployment::Base
     def config_copy
       return unless config.cp
 
-      rm_rf File.join(test_dir, file_copy) if test?
+      rm_rf File.join(test_dir, 'file_copy') if test?
 
       count = 0
 
@@ -164,6 +164,10 @@ module Comodule::Deployment::Base
 
     def name
       @name
+    end
+
+    def project_name
+      @project_name ||= File.basename(project_root)
     end
 
     def project_root

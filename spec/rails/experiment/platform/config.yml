@@ -1,0 +1,18 @@
+application: &application experiment
+aws_region: aws-region-name
+s3_bucket: !str your-bucket-name
+project_root: !str /your/project/root
+rails_root: !str /your/project/root/experiment
+
+hosted_zone_id: YOURHOSTEDZONEID
+
+upload_secret_files: false
+upload_project: false
+
+unicorn_rb: experiment_unicorn.rb
+
+ec2:
+  iam_role: role-name
+  security_group: security-group-name
+  key_name: key-name
+  name: *application
