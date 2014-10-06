@@ -17,6 +17,22 @@ module Comodule::Deployment::Helper::Aws::CloudFormation
       @cfn ||= aws.cloud_formation
     end
 
+    def stack_basename
+      stack_name = []
+      stack_name << (config.stack_name_prefix || owner.project_name)
+      stack_name << owner.name
+      stack_name.join(?-)
+    end
+
+    def own_stacks
+      cfn.stacks.find_all { |stack| stack.name =~ /#{stack_basename}/ }
+    end
+
+    def latest_stack
+      filter = -> stack { stack.name.match(/[0-9]*$/)[0].to_i }
+      own_stacks.max { |a,b| filter[a] <=> filter[b] }
+    end
+
     def create_stack(&block)
       if config.upload_secret_files
         puts 'Upload secret files'
@@ -28,22 +44,13 @@ module Comodule::Deployment::Helper::Aws::CloudFormation
         owner.upload_project
       end
 
-      stack_name = []
-      stack_name << config.stack_name_prefix if config.stack_name_prefix
-      stack_name << owner.name
-      stack_name << Time.now.strftime("%Y%m%d")
-      stack_name = stack_name.join(?-)
+      stack_name = [stack_basename, Time.now.strftime("%Y%m%d")].join(?-)
 
       template = validate_template(&block)
 
       stack = cfn.stacks.create(stack_name, template)
 
-      stack_name = stack.name
-      puts "Progress of creation stack: #{stack_name}"
-
-      File.open(File.join(owner.cloud_formation_dir, 'stack'), 'w') do |file|
-        file.write stack_name
-      end
+      puts "Progress of creation stack: #{stack.name}"
 
       status = stack_status_watch(stack)
 
@@ -51,23 +58,14 @@ module Comodule::Deployment::Helper::Aws::CloudFormation
     end
 
     def delete_stack
-      stack_memo_path = File.join(owner.cloud_formation_dir, 'stack')
+      stack = latest_stack
 
-      unless File.file?(stack_memo_path)
-        puts "stack not found.\n"
+      if !stack || !stack.exists?
+        puts "Stack:/#{stack_basename}-[0-9]*/ is not found.\n"
         exit
       end
 
-      stack_name = File.open(stack_memo_path).read
-
-      stack = cfn.stacks[stack_name]
-
-      unless stack.exists?
-        puts "Stack:#{stack_name} is not found.\n"
-        exit
-      end
-
-      print "You are going to delete stack #{stack_name}. Are you sure? [N/y] "
+      print "You are going to delete stack #{stack.name}. Are you sure? [N/y] "
       confirm = STDIN.gets
       unless confirm =~ /^y(es)?$/
         puts "\nAbort!\n"
@@ -76,7 +74,7 @@ module Comodule::Deployment::Helper::Aws::CloudFormation
 
       stack.delete
 
-      puts "Progress of deletion stack: #{stack_name}"
+      puts "Progress of deletion stack: #{stack.name}"
 
       status = stack_status_watch(stack)
 
