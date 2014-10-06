@@ -123,62 +123,37 @@ describe Comodule::Deployment::Helper::Uploader do
         platform.config.upload_secret_files = true
       end
 
-      context 'and not #deployment?' do
-        before do
-          platform.env = :test
-        end
+      it "copies the secret files to S3" do
+        expect(platform).to receive(:re_dir)
+        expect(platform).to receive(:be_dir).with(test_dir_common)
+        expect(platform).to receive(:be_dir).with(test_dir)
 
-        it "makes the secret files copy in test directory" do
-          expect(platform).to receive(:re_dir)
-          expect(platform).to receive(:be_dir).with(test_dir_common)
-          expect(platform).to receive(:be_dir).with(test_dir)
+        expect(FileUtils).to receive(:cp).with(common_secret_config, test_dir_common)
+        expect(FileUtils).to receive(:cp).with(secret_config, test_dir)
 
-          expect(FileUtils).to receive(:cp).with(common_secret_config, test_dir_common)
-          expect(FileUtils).to receive(:cp).with(secret_config, test_dir)
+        s3_obj_common = double('s3_obj_common')
+        s3_obj = double('s3_obj')
 
-          expect(platform.s3).not_to receive(:bucket)
+        expect(s3_obj_common).to receive(:write).with(
+          Pathname.new(common_secret_config), server_side_encryption: :aes256
+        )
+        expect(s3_obj).to receive(:write).with(
+          Pathname.new(secret_config), server_side_encryption: :aes256
+        )
 
-          is_expected.to eq(platform.secret_files)
-        end
-      end
+        allow(platform.s3).to receive_message_chain(
+          'bucket.objects.[]'
+        ).with(
+          "#{platform.name}/platform/secret_config.yml"
+        ).and_return(s3_obj_common)
 
-      context 'and #deployment?' do
-        before do
-          platform.env = :staging
-        end
+        allow(platform.s3).to receive_message_chain(
+          'bucket.objects.[]'
+        ).with(
+          "#{platform.name}/platform/#{platform.name}/secret_config.yml"
+        ).and_return(s3_obj)
 
-        it "copies the secret files to S3" do
-          expect(platform).to receive(:re_dir)
-          expect(platform).to receive(:be_dir).with(test_dir_common)
-          expect(platform).to receive(:be_dir).with(test_dir)
-
-          expect(FileUtils).to receive(:cp).with(common_secret_config, test_dir_common)
-          expect(FileUtils).to receive(:cp).with(secret_config, test_dir)
-
-          s3_obj_common = double('s3_obj_common')
-          s3_obj = double('s3_obj')
-
-          expect(s3_obj_common).to receive(:write).with(
-            Pathname.new(common_secret_config), server_side_encryption: :aes256
-          )
-          expect(s3_obj).to receive(:write).with(
-            Pathname.new(secret_config), server_side_encryption: :aes256
-          )
-
-          allow(platform.s3).to receive_message_chain(
-            'bucket.objects.[]'
-          ).with(
-            "#{platform.name}/platform/secret_config.yml"
-          ).and_return(s3_obj_common)
-
-          allow(platform.s3).to receive_message_chain(
-            'bucket.objects.[]'
-          ).with(
-            "#{platform.name}/platform/#{platform.name}/secret_config.yml"
-          ).and_return(s3_obj)
-
-          is_expected.to eq(platform.secret_files)
-        end
+        is_expected.to eq(platform.secret_files)
       end
     end
   end

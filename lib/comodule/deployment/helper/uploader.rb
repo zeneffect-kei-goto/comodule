@@ -37,10 +37,8 @@ module Comodule::Deployment::Helper::Uploader
       be_dir dir
       FileUtils.cp path, dir
 
-      if deployment?
-        obj = s3.bucket.objects[s3_path]
-        obj.write Pathname.new(path), server_side_encryption: :aes256
-      end
+      obj = s3.bucket.objects[s3_path]
+      obj.write Pathname.new(path), server_side_encryption: :aes256
     end
   end
 
